@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0F172A">
+  <title>Club Fidelidad · Tarjeta Digital de Sellos</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            dark: {
+              950: '#07090E',
+              900: '#0F172A',
+              850: '#151F38',
+              800: '#1E293B',
+              700: '#334155',
+              600: '#475569',
+            },
+            gold: {
+              300: '#FDE047',
+              400: '#FACC15',
+              500: '#EAB308',
+              600: '#CA8A04',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- QRCode Library (local with CDN fallback) -->
+  <script src="qrcode.min.js"></script>
+  <script>
+    if (typeof QRCode === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      document.head.appendChild(s);
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #07090E;
+      color: #E2E8F0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    input, textarea, select {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .modal-backdrop {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .gold-glow {
+      box-shadow: 0 0 25px -5px rgba(234, 179, 8, 0.45);
+    }
+    .stamp-active {
+      background: linear-gradient(135deg, #FDE047 0%, #EAB308 50%, #CA8A04 100%);
+      color: #0F172A;
+      box-shadow: 0 4px 14px rgba(234, 179, 8, 0.4), inset 0 2px 2px rgba(255, 255, 255, 0.6);
+      transform: scale(1.02);
+    }
+    .stamp-empty {
+      background: rgba(30, 41, 59, 0.6);
+      border: 2px dashed rgba(100, 116, 139, 0.5);
+      color: #64748B;
+    }
+    .pulse-vip {
+      animation: pulseVip 2s infinite;
+    }
+    @keyframes pulseVip {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+      50% { transform: scale(1.02); box-shadow: 0 0 20px 4px rgba(234, 179, 8, 0.3); }
+    }
+    @keyframes stampPop {
+      0% { transform: scale(0.6); opacity: 0; }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-stamp {
+      animation: stampPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center items-start sm:py-6">
+
+  <!-- Canvas para Confeti -->
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-[100] w-full h-full"></canvas>
+
+  <!-- Contenedor Principal (Mobile-First Frame) -->
+  <div class="w-full max-w-md bg-[#0F172A] min-h-screen sm:min-h-[880px] sm:rounded-[36px] sm:shadow-2xl sm:border-[5px] sm:border-slate-800 flex flex-col relative overflow-hidden pb-10">
+
+    <!-- ============================================================ -->
+    <!-- VISTA 1: PANEL DEL COMERCIO / ADMINISTRADOR                  -->
+    <!-- ============================================================ -->
+    <div id="adminView" class="flex-1 flex flex-col">
+      
+      <!-- Header Superior -->
+      <header class="pt-6 px-5 pb-4 bg-[#0F172A] sticky top-0 z-20 border-b border-slate-800/80">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl p-0.5 shadow-md flex-shrink-0 cursor-pointer bg-gradient-to-tr from-amber-500 to-amber-300" onclick="openSettingsModal()">
+              <div id="headerLogoContainer" class="w-full h-full bg-[#1E293B] rounded-[14px] flex items-center justify-center overflow-hidden border border-amber-500/30">
+                <span class="text-2xl" id="profileAvatar">⭐</span>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5 cursor-pointer" onclick="openSettingsModal()">
+                <h1 class="text-lg font-black tracking-tight text-white line-clamp-1" id="headerTitle">Club Fidelidad</h1>
+                <span class="text-[10px] text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.2 rounded-full font-bold">PRO</span>
+              </div>
+              <p class="text-xs font-semibold text-slate-400 tracking-wide flex items-center gap-1.5" id="headerSubtitle">
+                <span id="headerSubText" class="truncate max-w-[140px]">Tarjetas de Sellos</span>
+                <span class="text-slate-600">·</span>
+                <span class="text-[11px] font-medium text-amber-400/90 whitespace-nowrap" id="liveClock">🇦🇷 --:-- hs</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Acciones Rápidas del Header -->
+          <div class="flex items-center gap-2">
+            <!-- Botón Copia Drive -->
+            <button onclick="openBackupModal()" class="w-10 h-10 rounded-full bg-[#1E293B] border border-slate-700 flex items-center justify-center text-amber-400 hover:bg-slate-700 active:scale-95 transition-transform relative" title="Copia de seguridad">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+              </svg>
+              <span id="backupStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0F172A] absolute -top-0.5 -right-0.5 hidden"></span>
+            </button>
+
+            <!-- Botón Escáner / Búsqueda QR -->
+            <button onclick="openScannerModal()" class="w-10 h-10 rounded-full bg-[#1E293B] border border-amber-500/40 flex items-center justify-center text-amber-400 hover:bg-slate-700 active:scale-95 transition-transform" title="Buscar / Escanear QR de cliente">
+              <span class="text-base font-black">📷</span>
+            </button>
+
+            <!-- Botón Ajustes -->
+            <button onclick="openSettingsModal()" class="w-10 h-10 rounded-full bg-[#1E293B] border border-slate-700 flex items-center justify-center text-slate-300 hover:bg-slate-700 active:scale-95 transition-transform" title="Configurar Comercio y Reglas">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner de Estrategia Activa (Progreso Concedido) -->
+        <div class="mt-3 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 rounded-2xl px-3.5 py-2 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🎁</span>
+            <div>
+              <p class="text-[11px] font-bold text-amber-300">Bono de Bienvenida: <span id="bannerWelcomeStamps">4 sellos de regalo</span></p>
+              <p class="text-[10px] text-slate-400">Estrategia psicológica de progreso concedido activada</p>
+            </div>
+          </div>
+          <button onclick="openSettingsModal()" class="text-[10px] font-bold text-amber-400 underline underline-offset-2">Editar</button>
+        </div>
+
+        <!-- Métricas Rápidas -->
+        <div class="grid grid-cols-3 gap-2 mt-3">
+          <div onclick="setFilter('all')" class="bg-[#1E293B] rounded-2xl p-2.5 border border-slate-800 shadow-sm text-center cursor-pointer hover:border-amber-500/40 transition-all">
+            <p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Total Socios</p>
+            <p class="text-xl font-black text-white mt-0.5" id="statTotalClients">0</p>
+          </div>
+          <div onclick="setFilter('ready')" class="bg-[#1E293B] rounded-2xl p-2.5 border border-slate-800 shadow-sm text-center cursor-pointer hover:border-amber-500/40 transition-all">
+            <p class="text-[10px] uppercase tracking-wider font-bold text-amber-400 flex items-center justify-center gap-1">
+              <span>🎁 Canjear</span>
+            </p>
+            <p class="text-xl font-black text-amber-400 mt-0.5" id="statReadyToClaim">0</p>
+          </div>
+          <div class="bg-[#1E293B] rounded-2xl p-2.5 border border-slate-800 shadow-sm text-center">
+            <p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Sellos Hoy</p>
+            <p class="text-xl font-black text-emerald-400 mt-0.5" id="statStampsToday">0</p>
+          </div>
+        </div>
+
+        <!-- Buscador y Botón Nuevo Socio -->
+        <div class="mt-4 flex items-center gap-2">
+          <div class="relative flex-1">
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="Buscar por nombre o celular..." 
+              oninput="handleSearch()"
+              class="w-full bg-[#1E293B] border border-slate-700/80 rounded-2xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
+            >
+            <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+          </div>
+
+          <button 
+            onclick="openNewClientModal()" 
+            class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-2xl shadow-lg flex items-center gap-1.5 active:scale-95 transition-all flex-shrink-0"
+          >
+            <span>+</span>
+            <span>Nuevo Socio</span>
+          </button>
+        </div>
+
+        <!-- Pestañas de Filtros -->
+        <div class="flex items-center gap-1.5 mt-3 overflow-x-auto no-scrollbar pb-1 text-[11px] font-bold pr-2">
+          <button id="filterBtnAll" onclick="setFilter('all')" class="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 whitespace-nowrap transition-colors">
+            Todos (<span id="countAll">0</span>)
+          </button>
+          <button id="filterBtnReady" onclick="setFilter('ready')" class="px-2.5 py-1.5 rounded-xl bg-[#1E293B] text-slate-300 border border-slate-700 hover:border-amber-500/40 whitespace-nowrap transition-colors">
+            🎁 Canje (<span id="countReady">0</span>)
+          </button>
+          <button id="filterBtnClose" onclick="setFilter('close')" class="px-2.5 py-1.5 rounded-xl bg-[#1E293B] text-slate-300 border border-slate-700 hover:border-amber-500/40 whitespace-nowrap transition-colors">
+            ⚡ Falta 1-2 (<span id="countClose">0</span>)
+          </button>
+          <button id="filterBtnWelcome" onclick="setFilter('welcome')" class="px-2.5 py-1.5 rounded-xl bg-[#1E293B] text-slate-300 border border-slate-700 hover:border-amber-500/40 whitespace-nowrap transition-colors">
+            🎉 Bono (<span id="countWelcome">0</span>)
+          </button>
+        </div>
+      </header>
+
+      <!-- Lista de Socios y Tarjetas -->
+      <main class="flex-1 px-4 py-4 space-y-3.5" id="clientsList">
+        <!-- Renderizado dinámicamente con JavaScript -->
+      </main>
+      
+      <!-- Footer Discreto -->
+      <footer class="px-5 py-4 text-center text-[11px] text-slate-500 border-t border-slate-800/80">
+        <p>Club de Fidelización · Micro App Independiente</p>
+        <p class="text-[10px] text-slate-600 mt-0.5">Funciona 100% offline en tu dispositivo · Sin suscripciones</p>
+      </footer>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- VISTA 2: PASE DIGITAL / TARJETA DEL CLIENTE (VISTA MÓVIL)     -->
+    <!-- ============================================================ -->
+    <div id="customerPassView" class="flex-1 flex flex-col hidden bg-[#07090E] p-4 sm:p-6 overflow-y-auto no-scrollbar">
+      
+      <!-- Barra superior cliente -->
+      <div class="flex items-center justify-between pb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg overflow-hidden border border-amber-500/30 flex-shrink-0" id="customerPassLogo">
+            ⭐
+          </div>
+          <div>
+            <h2 class="text-sm font-black text-white leading-tight" id="customerPassBizName">Mi Negocio</h2>
+            <p class="text-[10px] text-slate-400">Tarjeta Digital de Beneficios</p>
+          </div>
+        </div>
+        <button onclick="exitCustomerPassView()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full text-xs font-bold border border-slate-700 active:scale-95 transition-all">
+          ← Volver
+        </button>
+      </div>
+
+      <!-- Tarjeta VIP Perforada (Estilo Apple / Google Wallet) -->
+      <div class="w-full bg-gradient-to-b from-[#1E293B] via-[#151F38] to-[#0F172A] border-2 border-amber-500/40 rounded-3xl p-6 shadow-2xl relative overflow-hidden space-y-5">
+        
+        <!-- Marca de agua decorativa -->
+        <div class="absolute -right-8 -top-8 text-9xl opacity-5 pointer-events-none" id="customerCardWatermark">
+          ⭐
+        </div>
+
+        <!-- Encabezado de la Tarjeta -->
+        <div class="flex items-start justify-between border-b border-slate-700/60 pb-4 relative z-10">
+          <div>
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-1.5">
+              Socio VIP
+            </span>
+            <h3 class="text-xl font-black text-white tracking-tight" id="customerPassName">Juan Pérez</h3>
+            <p class="text-xs text-slate-400 font-mono mt-0.5" id="customerPassId">Socio #001</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Progreso</span>
+            <p class="text-lg font-black text-amber-400" id="customerPassProgressText">4 / 8</p>
+          </div>
+        </div>
+
+        <!-- Matriz de Sellos Perforados -->
+        <div class="relative z-10">
+          <div class="grid grid-cols-4 gap-3 py-2" id="customerPassGrid">
+            <!-- Sellos generados dinámicamente -->
+          </div>
+        </div>
+
+        <!-- Mensaje de Progreso Dinámico y Bono de Bienvenida -->
+        <div id="customerPassMotivationBox" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 text-center space-y-1 relative z-10">
+          <p class="text-xs font-black text-amber-300" id="customerPassMotivationTitle">🎉 ¡Bienvenido a nuestro Club!</p>
+          <p class="text-[11px] text-slate-300" id="customerPassMotivationDesc">Te regalamos tus primeros 4 sellos. ¡Ya estás a mitad de camino!</p>
+        </div>
+
+        <!-- Barra de Progreso Visual -->
+        <div class="space-y-1.5 relative z-10">
+          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-700/60">
+            <div id="customerPassProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-700" style="width: 50%;"></div>
+          </div>
+          <div class="flex justify-between text-[10px] font-bold text-slate-400">
+            <span>Inicio</span>
+            <span id="customerPassRewardLabel">🎁 Premio: 1 Café Gratis</span>
+          </div>
+        </div>
+
+        <!-- Código QR Personal del Cliente -->
+        <div class="bg-white rounded-2xl p-4 flex flex-col items-center justify-center space-y-2 text-slate-950 relative z-10 shadow-lg">
+          <div id="customerPassQrContainer" class="w-40 h-40 flex items-center justify-center"></div>
+          <p class="text-[11px] font-black text-slate-800 text-center">Mostrá este código en caja para sumar sellos</p>
+        </div>
+
+        <!-- Botón para Sumar Sello Rápido con PIN (Exclusivo Comercio) -->
+        <div class="pt-2 text-center relative z-10">
+          <button onclick="promptMerchantPinForStamp()" class="text-[11px] font-bold text-slate-400 hover:text-amber-400 transition-colors flex items-center justify-center gap-1.5 mx-auto">
+            <span>🔒</span>
+            <span>¿Sos el comercio? Sumar sello con PIN</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tips para guardar en pantalla de inicio -->
+      <div class="mt-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 text-center text-xs text-slate-400 space-y-1">
+        <p class="font-bold text-slate-300">💡 ¿Cómo guardar tu tarjeta en el celular?</p>
+        <p class="text-[11px]">En Safari tocá <strong>Compartir → Agregar a Inicio</strong>. En Chrome tocá los <strong>3 puntos → Instalar aplicación</strong>.</p>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- MODALES                                                      -->
+  <!-- ============================================================ -->
+
+  <!-- 1. MODAL: NUEVO SOCIO (CON BONO DE BIENVENIDA) -->
+  <div id="newClientModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 modal-backdrop hidden transition-opacity">
+    <div class="bg-[#151F38] border border-slate-700 text-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto no-scrollbar p-6 shadow-2xl flex flex-col space-y-4">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700/80">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg">👤</span>
+          <div>
+            <h2 class="text-base font-black text-white leading-tight">Nuevo Socio</h2>
+            <p class="text-[11px] text-slate-400">Sumá un cliente y fidelizalo al instante</p>
+          </div>
+        </div>
+        <button onclick="closeNewClientModal()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <form onsubmit="handleSaveNewClient(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Nombre Completo *</label>
+          <input 
+            type="text" 
+            id="newClientName" 
+            placeholder="Ej: Mateo Rossi" 
+            required
+            class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">WhatsApp / Teléfono *</label>
+          <input 
+            type="tel" 
+            id="newClientPhone" 
+            placeholder="Ej: 5491112345678" 
+            required
+            class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono"
+          >
+          <p class="text-[10px] text-slate-400 mt-1">Con código de país y área (sin 0 ni 15 para Argentina).</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Notas o Preferencias (Opcional)</label>
+          <input 
+            type="text" 
+            id="newClientNotes" 
+            placeholder="Ej: Le gusta cortado con leche vegetal" 
+            class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+          >
+        </div>
+
+        <!-- Tarjeta Especial: ESTRATEGIA DE PROGRESO CONCEDIDO -->
+        <div class="bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent border-2 border-amber-500/40 rounded-2xl p-4 space-y-3">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🎁</span>
+              <div>
+                <h4 class="text-xs font-black text-amber-300">Bono de Bienvenida Estratégico</h4>
+                <p class="text-[10px] text-slate-300 leading-tight">Efecto progreso concedido para enganchar al cliente desde el día 1</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="welcomeToggleCheckbox" class="sr-only peer" checked onchange="updateWelcomeStampsPreview()">
+              <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+            </label>
+          </div>
+
+          <div id="welcomeStampsConfigBlock" class="pt-2 border-t border-amber-500/20 space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span class="text-slate-300">Sellos de regalo iniciales:</span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="adjustNewClientWelcomeStamps(-1)" class="w-7 h-7 rounded-lg bg-slate-800 text-amber-400 font-black border border-slate-700 active:scale-95">-</button>
+                <span id="newClientWelcomeStampsCount" class="font-black text-amber-400 text-sm px-2">4</span>
+                <button type="button" onclick="adjustNewClientWelcomeStamps(1)" class="w-7 h-7 rounded-lg bg-slate-800 text-amber-400 font-black border border-slate-700 active:scale-95">+</button>
+              </div>
+            </div>
+
+            <!-- Preview Visual de Sellos Iniciales -->
+            <div class="bg-[#0F172A] rounded-xl p-2.5 flex items-center justify-center gap-2" id="welcomeStampsVisualPreview">
+              <!-- Renderizado interactivo -->
+            </div>
+            <p class="text-[10px] text-amber-300/90 text-center font-medium" id="welcomeStampsTextPreview">
+              Empieza con 4 de 8 sellos. ¡Le faltarán solo 4 para su premio!
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-2 space-y-2">
+          <button 
+            type="submit" 
+            onclick="window.submitAction = 'whatsapp'"
+            class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all"
+          >
+            <span>💬</span>
+            <span>Guardar y Enviar WhatsApp de Bienvenida</span>
+          </button>
+
+          <button 
+            type="submit" 
+            onclick="window.submitAction = 'saveOnly'"
+            class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 active:scale-95 transition-all"
+          >
+            Guardar Solo (Sin WhatsApp)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 2. MODAL: CANJE DE PREMIO -->
+  <div id="claimModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 modal-backdrop hidden transition-opacity">
+    <div class="bg-[#151F38] border-2 border-amber-500/60 text-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl flex flex-col space-y-4 text-center">
+      
+      <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 flex items-center justify-center text-3xl mx-auto shadow-lg pulse-vip">
+        🎁
+      </div>
+
+      <div>
+        <h3 class="text-xl font-black text-white" id="claimModalClientName">Mateo Rossi</h3>
+        <p class="text-xs text-amber-400 font-bold uppercase tracking-wider mt-0.5">¡Completó todos los sellos!</p>
+      </div>
+
+      <div class="bg-[#0F172A] border border-amber-500/30 rounded-2xl p-4 space-y-1">
+        <p class="text-[11px] text-slate-400">Premio a entregar:</p>
+        <p class="text-base font-black text-amber-300" id="claimModalRewardTitle">1 Café de Especialidad Gratis</p>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Al confirmar el canje, los sellos de esta tarjeta se reinician a 0 para empezar un nuevo ciclo, y se suma <strong>+1 premio canjeado</strong> al historial del socio.
+      </p>
+
+      <div class="pt-2 space-y-2">
+        <button 
+          onclick="confirmRewardClaim(true)"
+          class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all"
+        >
+          <span>🎉</span>
+          <span>Confirmar Canje y Avisar por WhatsApp</span>
+        </button>
+
+        <button 
+          onclick="confirmRewardClaim(false)"
+          class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 active:scale-95 transition-all"
+        >
+          Confirmar Canje Solo
+        </button>
+
+        <button 
+          onclick="closeClaimModal()"
+          class="w-full py-2 text-slate-500 hover:text-slate-300 text-xs font-semibold"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 3. MODAL: ESCÁNER / BÚSQUEDA RÁPIDA DE CLIENTE -->
+  <div id="scannerModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 modal-backdrop hidden transition-opacity">
+    <div class="bg-[#151F38] border border-slate-700 text-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl flex flex-col space-y-4">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg">📷</span>
+          <div>
+            <h2 class="text-base font-black text-white leading-tight">Buscar o Escanear Socio</h2>
+            <p class="text-[11px] text-slate-400">Sumá sellos en el mostrador en 2 segundos</p>
+          </div>
+        </div>
+        <button onclick="closeScannerModal()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Buscar por código, celular o nombre:</label>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="quickSearchInput" 
+              placeholder="Ej: 001 o 1112345678" 
+              class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+              oninput="handleQuickSearchLive()"
+            >
+          </div>
+        </div>
+
+        <!-- Resultados de búsqueda rápida -->
+        <div id="quickSearchResults" class="max-h-60 overflow-y-auto space-y-2 no-scrollbar">
+          <!-- Renderizado dinámico -->
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 text-center space-y-1 text-slate-400 text-xs">
+          <p class="font-bold text-slate-300">💡 ¿El cliente tiene su QR en pantalla?</p>
+          <p class="text-[11px]">Pedile su número de socio o los últimos 4 dígitos de su celular para encontrarlo de inmediato.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 4. MODAL: AJUSTES DEL COMERCIO Y REGLAS DE FIDELIZACIÓN -->
+  <div id="settingsModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 modal-backdrop hidden transition-opacity">
+    <div class="bg-[#151F38] border border-slate-700 text-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto no-scrollbar p-6 shadow-2xl flex flex-col space-y-5">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg">⚙️</span>
+          <div>
+            <h2 class="text-base font-black text-white leading-tight">Ajustes del Comercio</h2>
+            <p class="text-[11px] text-slate-400">Reglas, sellos, bonos y personalización</p>
+          </div>
+        </div>
+        <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        
+        <!-- Subir Logo o Foto del Local -->
+        <div class="bg-[#0F172A] border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div id="modalLogoPreview" class="w-14 h-14 rounded-2xl bg-slate-800 border-2 border-amber-500/40 flex items-center justify-center overflow-hidden text-2xl shadow-md flex-shrink-0">
+              <span id="modalLogoPreviewFallback">⭐</span>
+            </div>
+            <div>
+              <p class="font-bold text-white text-xs">Logo / Foto del Negocio</p>
+              <p class="text-[10px] text-slate-400">Aparece en el mostrador y en la tarjeta del cliente</p>
+            </div>
+          </div>
+          <div class="flex flex-col gap-1 items-end flex-shrink-0">
+            <label class="cursor-pointer px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1">
+              <span>📷 Subir Logo</span>
+              <input type="file" id="logoFileInput" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+            </label>
+            <button type="button" id="btnRemoveLogo" onclick="removeBizLogo()" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold hidden">
+              Quitar logo
+            </button>
+          </div>
+        </div>
+
+        <!-- Nombre y Slogan -->
+        <div class="space-y-3">
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Nombre del Comercio / Negocio</label>
+            <input 
+              type="text" 
+              id="settingBizName" 
+              placeholder="Ej: Café Urbano · Especialidad"
+              class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            >
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Subtítulo / Rubro</label>
+            <input 
+              type="text" 
+              id="settingBizSub" 
+              placeholder="Ej: Club de Beneficios & Fidelidad"
+              class="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            >
+          </div>
+        </div>
+
+        <!-- Icono / Sello del Negocio por Rubro -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-slate-300">Icono o Sello del Negocio:</label>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] text-slate-400">Personalizado:</span>
+              <input 
+                type="text" 
+                id="customEmojiInput" 
+                maxlength="3" 
+                placeholder="Ej: 🚀" 
+                oninput="handleCustomEmojiInput(event)" 
+                class="w-12 bg-[#0F172A] border border-amber-500/50 rounded-lg py-0.5 px-1 text-center text-sm focus:outline-none focus:border-amber-400"
+                title="Escribí o pegá cualquier emoji aquí"
+              >
+            </div>
+          </div>
+
+          <!-- Selector de Rubros / Categorías -->
+          <div class="flex gap-1 overflow-x-auto no-scrollbar pb-1 text-[10px] font-bold">
+            <button type="button" onclick="showEmojiCategory('comic')" id="catBtn_comic" class="cat-pill px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 whitespace-nowrap">🦸 Comic & Anime</button>
+            <button type="button" onclick="showEmojiCategory('tech')" id="catBtn_tech" class="cat-pill px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">💻 PC & Tech</button>
+            <button type="button" onclick="showEmojiCategory('sport')" id="catBtn_sport" class="cat-pill px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">⚽ Deportes</button>
+            <button type="button" onclick="showEmojiCategory('beauty')" id="catBtn_beauty" class="cat-pill px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">💅 Manicura & Spa</button>
+            <button type="button" onclick="showEmojiCategory('food')" id="catBtn_food" class="cat-pill px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">☕ Café & Comida</button>
+            <button type="button" onclick="showEmojiCategory('pets')" id="catBtn_pets" class="cat-pill px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">🐾 Mascotas</button>
+            <button type="button" onclick="showEmojiCategory('auto')" id="catBtn_auto" class="cat-pill px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">🚗 Autos</button>
+            <button type="button" onclick="showEmojiCategory('vip')" id="catBtn_vip" class="cat-pill px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">⭐ General</button>
+          </div>
+
+          <!-- Grilla Dinámica de Emojis -->
+          <div id="emojiGridContainer" class="bg-[#0F172A] border border-slate-700 rounded-2xl p-2.5 grid grid-cols-7 gap-1.5 max-h-36 overflow-y-auto no-scrollbar">
+            <!-- Rellenado dinámicamente según la categoría activa -->
+          </div>
+          <input type="hidden" id="settingStampEmoji" value="⭐">
+        </div>
+
+        <!-- Meta de Sellos y Bono de Bienvenida -->
+        <div class="bg-[#0F172A] border border-slate-700/80 rounded-2xl p-4 space-y-3.5">
+          <h4 class="font-black text-amber-400 text-xs uppercase tracking-wider">🎯 Reglas de la Tarjeta</h4>
+          
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Meta de sellos para ganar el premio:</label>
+            <div class="grid grid-cols-5 gap-2">
+              <button type="button" onclick="selectTotalStamps(4)" class="total-stamps-btn py-2 rounded-xl bg-slate-800 border border-slate-700 font-black text-xs hover:border-amber-500">4</button>
+              <button type="button" onclick="selectTotalStamps(6)" class="total-stamps-btn py-2 rounded-xl bg-slate-800 border border-slate-700 font-black text-xs hover:border-amber-500">6</button>
+              <button type="button" onclick="selectTotalStamps(8)" class="total-stamps-btn py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs">8</button>
+              <button type="button" onclick="selectTotalStamps(10)" class="total-stamps-btn py-2 rounded-xl bg-slate-800 border border-slate-700 font-black text-xs hover:border-amber-500">10</button>
+              <button type="button" onclick="selectTotalStamps(12)" class="total-stamps-btn py-2 rounded-xl bg-slate-800 border border-slate-700 font-black text-xs hover:border-amber-500">12</button>
+            </div>
+            <input type="hidden" id="settingTotalStamps" value="8">
+          </div>
+
+          <!-- Bono de Bienvenida (Efecto Progreso Concedido) -->
+          <div class="border-t border-slate-800 pt-3 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="block font-bold text-amber-300">🎁 Bono de Bienvenida (Por Defecto)</label>
+                <p class="text-[10px] text-slate-400">Sellos regalados de entrada al registrar nuevo cliente</p>
+              </div>
+              <select id="settingWelcomeStamps" class="bg-slate-800 border border-amber-500/40 rounded-xl px-3 py-1.5 text-xs font-black text-amber-300 focus:outline-none">
+                <option value="0">0 (Empieza de cero)</option>
+                <option value="1">1 sello de regalo</option>
+                <option value="2">2 sellos de regalo</option>
+                <option value="3">3 sellos de regalo</option>
+                <option value="4" selected>4 sellos de regalo (Recomendado)</option>
+                <option value="5">5 sellos de regalo</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Premio Prometido -->
+          <div class="border-t border-slate-800 pt-3">
+            <label class="block font-bold text-slate-300 mb-1">Premio al completar la tarjeta:</label>
+            <input 
+              type="text" 
+              id="settingRewardTitle" 
+              placeholder="Ej: 1 Café de especialidad con medialuna"
+              class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+            >
+          </div>
+        </div>
+
+        <!-- PIN de Seguridad para mostrador -->
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">PIN de Seguridad del Comercio (4 dígitos):</label>
+          <input 
+            type="password" 
+            id="settingPin" 
+            maxlength="4" 
+            placeholder="1234"
+            class="w-28 bg-[#0F172A] border border-slate-700 rounded-xl px-3.5 py-2 text-center text-sm font-mono font-black text-amber-400 focus:outline-none focus:border-amber-500"
+          >
+          <p class="text-[10px] text-slate-400 mt-1">Sirve para sumar sellos rápidamente desde el celular del cliente si abre su tarjeta.</p>
+        </div>
+
+        <!-- Botón Guardar Ajustes -->
+        <div class="pt-3">
+          <button 
+            onclick="saveSettings()"
+            class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-lg active:scale-95 transition-all"
+          >
+            Guardar Todos los Ajustes
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 5. MODAL: COPIA DE SEGURIDAD EN GOOGLE DRIVE Y LOCAL -->
+  <div id="backupModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 modal-backdrop hidden transition-opacity">
+    <div class="bg-[#151F38] border border-slate-700 text-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto no-scrollbar p-6 shadow-2xl flex flex-col space-y-4">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg">☁️</span>
+          <div>
+            <h2 class="text-base font-black text-white leading-tight">Copia de Seguridad</h2>
+            <p class="text-[11px] text-slate-400" id="lastBackupText">Sincronización activa</p>
+          </div>
+        </div>
+        <button onclick="closeBackupModal()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <p class="text-slate-300 leading-relaxed">
+          Tus socios, sellos otorgados, premios y configuraciones se guardan automáticamente en tu dispositivo y pueden sincronizarse en la carpeta <strong>"Copia de seguridad Fidelizacion"</strong> de Google Drive.
+        </p>
+
+        <button 
+          onclick="syncToGoogleDriveNow(true)" 
+          id="btnSyncNow"
+          class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 rounded-xl font-black text-xs shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all"
+        >
+          <span>☁️ Guardar Copia en Google Drive Ahora</span>
+        </button>
+
+        <div class="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2">
+          <button 
+            onclick="exportBackupJSON()"
+            class="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+          >
+            <span>📥 Descargar JSON</span>
+          </button>
+          
+          <button 
+            onclick="exportToExcelCSV()"
+            class="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded-xl font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+          >
+            <span>📊 Planilla Excel</span>
+          </button>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800">
+          <label class="block font-bold text-slate-400 mb-1">Restaurar copia de seguridad:</label>
+          <input 
+            type="file" 
+            id="restoreFileInput" 
+            accept=".json"
+            onchange="handleRestoreFile(event)"
+            class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer"
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- JAVASCRIPT: LÓGICA COMPLETA DE LA APP                        -->
+  <!-- ============================================================ -->
+  <script>
+    // Configuración y Constantes de Almacenamiento
+    const STORAGE_KEY_CLIENTS = 'fidelizacion_clients_v1';
+    const STORAGE_KEY_SETTINGS = 'fidelizacion_settings_v1';
+    const AUTO_DRIVE_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzI2Bn0rj_MpW5lFhNJ2um2oEiwtSR4YRbfzedtoYL150rtvcKJ4go_bmLthl24xzMF2Q/exec';
+    const AUTO_DRIVE_FOLDER = 'Copia de seguridad Fidelizacion';
+
+    // Configuración por Defecto
+    const DEFAULT_SETTINGS = {
+      bizName: 'Club Fidelidad',
+      bizSub: 'Tarjetas de Sellos & Beneficios',
+      stampEmoji: '⭐',
+      bizLogo: '', // Imagen en Base64
+      totalStamps: 8,
+      welcomeStamps: 4, // Estrategia de Progreso Concedido
+      rewardTitle: '1 Consumición o Premio Especial Gratis',
+      pin: '1234',
+      phone: '',
+      driveWebhookUrl: AUTO_DRIVE_WEBHOOK,
+      autoSyncDrive: true,
+      lastBackupDate: null
+    };
+
+    // Catálogo Extenso de Emojis por Rubro (Comic, Anime, Tech, Deportes, Belleza, etc.)
+    const EMOJI_CATALOG = {
+      comic: ['🦸‍♂️', '🦹', '⚡', '💥', '🐉', '🍙', '🗡️', '🎲', '👾', '🕹️', '🎮', '🤖', '🎴', '🧙'],
+      tech: ['💻', '🖥️', '⌨️', '🖱️', '📱', '🔧', '⚙️', '💾', '🔋', '🎧', '🔌', '🛰️', '💡', '📡'],
+      sport: ['⚽', '🏀', '🎾', '🥊', '🏋️', '🚴', '🏃', '🏆', '🥇', '🥋', '🛹', '🏊', '🎯', '🧗'],
+      beauty: ['💅', '💄', '💇‍♀️', '✂️', '🪒', '💈', '🧴', '🌸', '✨', '🧖‍♀️', '👁️', '💋', '🪞', '🌺'],
+      food: ['☕', '🥐', '🍔', '🍕', '🌭', '🍦', '🍺', '🍷', '🍗', '🥟', '🍣', '🍰', '🍟', '🌮'],
+      pets: ['🐾', '🐶', '🐱', '🦴', '🐠', '🦜', '🐹', '🐰', '🦁', '🐢', '🐈', '🦮'],
+      auto: ['🚗', '🏍️', '🧼', '🛞', '⛽', '🏎️', '🛵', '🚲', '🚚', '🛠️'],
+      vip: ['⭐', '🎁', '💎', '👑', '❤️', '🏷️', '🛍️', '🔥', '🌟', '🎉', '🏆', '💫']
+    };
+    let activeEmojiCategory = 'comic';
+
+    // Estado en Memoria
+    let settings = { ...DEFAULT_SETTINGS };
+    let clients = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let pendingClaimClientId = null;
+
+    // Inicialización al Cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
+      loadClients();
+      updateClock();
+      setInterval(updateClock, 30000);
+
+      // Revisar si se entra en Modo Pase Digital del Cliente (URL con ?tarjeta=ID o ?c=ID)
+      const urlParams = new URLSearchParams(window.location.search);
+      const customerCardId = urlParams.get('tarjeta') || urlParams.get('c') || urlParams.get('card');
+      
+      if (customerCardId) {
+        showCustomerPass(customerCardId);
+      } else {
+        renderDashboard();
+      }
+
+      // Sincronización silenciosa en background al iniciar
+      if (navigator.onLine && settings.autoSyncDrive) {
+        setTimeout(() => syncToGoogleDriveNow(false), 2500);
+      }
+    });
+
+    // -------------------------------------------------------------
+    // GESTIÓN DE CONFIGURACIÓN Y PERSISTENCIA
+    // -------------------------------------------------------------
+    function loadSettings() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        if (saved) {
+          settings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+        }
+      } catch (e) {
+        console.error('Error cargando ajustes:', e);
+      }
+      applySettingsToUI();
+    }
+
+    function saveSettingsToStorage() {
+      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+    }
+
+    function applySettingsToUI() {
+      document.getElementById('headerTitle').textContent = settings.bizName;
+      document.getElementById('headerSubText').textContent = settings.bizSub;
+      document.getElementById('bannerWelcomeStamps').textContent = `${settings.welcomeStamps} sellos de regalo`;
+      
+      // Modal de ajustes
+      document.getElementById('settingBizName').value = settings.bizName;
+      document.getElementById('settingBizSub').value = settings.bizSub;
+      document.getElementById('settingStampEmoji').value = settings.stampEmoji;
+      document.getElementById('settingTotalStamps').value = settings.totalStamps;
+      document.getElementById('settingWelcomeStamps').value = settings.welcomeStamps;
+      document.getElementById('settingRewardTitle').value = settings.rewardTitle;
+      document.getElementById('settingPin').value = settings.pin;
+
+      const customInput = document.getElementById('customEmojiInput');
+      if (customInput) customInput.value = settings.stampEmoji;
+
+      // Resaltar botones de ajustes y catálogo
+      showEmojiCategory(activeEmojiCategory);
+      highlightTotalStampsBtn(settings.totalStamps);
+      updateLogosAndAvatars();
+    }
+
+    function saveSettings() {
+      settings.bizName = document.getElementById('settingBizName').value.trim() || DEFAULT_SETTINGS.bizName;
+      settings.bizSub = document.getElementById('settingBizSub').value.trim() || DEFAULT_SETTINGS.bizSub;
+      settings.stampEmoji = document.getElementById('settingStampEmoji').value || '⭐';
+      settings.totalStamps = parseInt(document.getElementById('settingTotalStamps').value) || 8;
+      settings.welcomeStamps = parseInt(document.getElementById('settingWelcomeStamps').value) || 0;
+      settings.rewardTitle = document.getElementById('settingRewardTitle').value.trim() || DEFAULT_SETTINGS.rewardTitle;
+      settings.pin = document.getElementById('settingPin').value.trim() || '1234';
+
+      saveSettingsToStorage();
+      applySettingsToUI();
+      closeSettingsModal();
+      renderDashboard();
+
+      if (settings.autoSyncDrive) {
+        syncToGoogleDriveNow(false);
+      }
+    }
+
+    // Gestión de Logos y Avatares
+    function updateLogosAndAvatars() {
+      const headerContainer = document.getElementById('headerLogoContainer');
+      const passLogo = document.getElementById('customerPassLogo');
+      const modalPreview = document.getElementById('modalLogoPreview');
+      const btnRemove = document.getElementById('btnRemoveLogo');
+
+      const logoHtml = settings.bizLogo 
+        ? `<img src="${settings.bizLogo}" alt="Logo" class="w-full h-full object-cover">`
+        : `<span class="text-2xl">${settings.stampEmoji || '⭐'}</span>`;
+
+      if (headerContainer) headerContainer.innerHTML = logoHtml;
+      if (passLogo) passLogo.innerHTML = logoHtml;
+      if (modalPreview) modalPreview.innerHTML = logoHtml;
+
+      if (btnRemove) {
+        if (settings.bizLogo) {
+          btnRemove.classList.remove('hidden');
+        } else {
+          btnRemove.classList.add('hidden');
+        }
+      }
+    }
+
+    function handleLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const maxDim = 280;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          settings.bizLogo = canvas.toDataURL('image/jpeg', 0.85);
+          saveSettingsToStorage();
+          updateLogosAndAvatars();
+
+          if (settings.autoSyncDrive) syncToGoogleDriveNow(false);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+
+    function removeBizLogo() {
+      settings.bizLogo = '';
+      saveSettingsToStorage();
+      updateLogosAndAvatars();
+      if (settings.autoSyncDrive) syncToGoogleDriveNow(false);
+    }
+
+    // Catálogo y Selección de Emojis
+    function showEmojiCategory(catKey) {
+      activeEmojiCategory = catKey;
+      const list = EMOJI_CATALOG[catKey] || EMOJI_CATALOG.comic;
+      const container = document.getElementById('emojiGridContainer');
+      if (!container) return;
+
+      container.innerHTML = '';
+      list.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `emoji-btn h-10 rounded-xl bg-[#0F172A] border ${settings.stampEmoji === emoji ? 'border-amber-500 bg-amber-500/20 text-amber-300' : 'border-slate-700 text-slate-300'} text-lg flex items-center justify-center hover:border-amber-500 active:scale-95 transition-all`;
+        btn.textContent = emoji;
+        btn.onclick = () => selectStampEmoji(emoji);
+        container.appendChild(btn);
+      });
+
+      // Actualizar pills de categoría
+      document.querySelectorAll('.cat-pill').forEach(pill => {
+        if (pill.id === `catBtn_${catKey}`) {
+          pill.className = 'cat-pill px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black whitespace-nowrap transition-colors';
+        } else {
+          pill.className = 'cat-pill px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap transition-colors';
+        }
+      });
+    }
+
+    function selectStampEmoji(emoji) {
+      if (!emoji) return;
+      settings.stampEmoji = emoji;
+      const input = document.getElementById('settingStampEmoji');
+      if (input) input.value = emoji;
+
+      const customInput = document.getElementById('customEmojiInput');
+      if (customInput && customInput.value !== emoji) customInput.value = emoji;
+
+      // Resaltar en la grilla activa
+      document.querySelectorAll('.emoji-btn').forEach(btn => {
+        if (btn.textContent.trim() === emoji) {
+          btn.className = 'emoji-btn h-10 rounded-xl bg-[#0F172A] border border-amber-500 bg-amber-500/20 text-amber-300 text-lg flex items-center justify-center active:scale-95 transition-all';
+        } else {
+          btn.className = 'emoji-btn h-10 rounded-xl bg-[#0F172A] border border-slate-700 text-slate-300 text-lg flex items-center justify-center hover:border-amber-500 active:scale-95 transition-all';
+        }
+      });
+
+      updateLogosAndAvatars();
+    }
+
+    function handleCustomEmojiInput(e) {
+      const val = e.target.value.trim();
+      if (val) {
+        selectStampEmoji(val);
+      }
+    }
+
+    function selectTotalStamps(num) {
+      document.getElementById('settingTotalStamps').value = num;
+      highlightTotalStampsBtn(num);
+    }
+
+    function highlightTotalStampsBtn(num) {
+      document.querySelectorAll('.total-stamps-btn').forEach(btn => {
+        if (parseInt(btn.textContent) === num) {
+          btn.className = 'total-stamps-btn py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs';
+        } else {
+          btn.className = 'total-stamps-btn py-2 rounded-xl bg-slate-800 border border-slate-700 font-black text-xs hover:border-amber-500 text-slate-300';
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // GESTIÓN DE CLIENTES / SOCIOS
+    // -------------------------------------------------------------
+    function loadClients() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_CLIENTS);
+        if (saved) {
+          clients = JSON.parse(saved);
+        } else {
+          // Datos iniciales de demostración si está vacío
+          clients = [
+            {
+              id: 'cli_1',
+              name: 'Mateo Rossi',
+              phone: '5491155443322',
+              stamps: 8,
+              totalStampsTarget: 8,
+              rewardsClaimed: 1,
+              isWelcomeBonus: true,
+              welcomeStampsGranted: 4,
+              notes: 'Prefiere café cortado con leche descremada',
+              lastVisit: new Date().toISOString(),
+              createdAt: new Date().toISOString()
+            },
+            {
+              id: 'cli_2',
+              name: 'Camila Benítez',
+              phone: '5491144332211',
+              stamps: 7,
+              totalStampsTarget: 8,
+              rewardsClaimed: 0,
+              isWelcomeBonus: true,
+              welcomeStampsGranted: 4,
+              notes: 'Viene los miércoles',
+              lastVisit: new Date().toISOString(),
+              createdAt: new Date().toISOString()
+            },
+            {
+              id: 'cli_3',
+              name: 'Lucas Gómez',
+              phone: '5491133221100',
+              stamps: 4,
+              totalStampsTarget: 8,
+              rewardsClaimed: 0,
+              isWelcomeBonus: true,
+              welcomeStampsGranted: 4,
+              notes: 'Nuevo socio con bono de bienvenida',
+              lastVisit: new Date().toISOString(),
+              createdAt: new Date().toISOString()
+            }
+          ];
+          saveClientsToStorage();
+        }
+      } catch (e) {
+        console.error('Error cargando clientes:', e);
+        clients = [];
+      }
+    }
+
+    function saveClientsToStorage() {
+      localStorage.setItem(STORAGE_KEY_CLIENTS, JSON.stringify(clients));
+    }
+
+    // -------------------------------------------------------------
+    // RENDERIZADO DEL DASHBOARD Y LISTA
+    // -------------------------------------------------------------
+    function renderDashboard() {
+      updateStats();
+      renderClientsList();
+    }
+
+    function updateStats() {
+      const total = clients.length;
+      const ready = clients.filter(c => c.stamps >= (c.totalStampsTarget || settings.totalStamps)).length;
+      
+      // Contar sellos otorgados hoy
+      const todayStr = new Date().toISOString().split('T')[0];
+      const stampsToday = clients.filter(c => c.lastVisit && c.lastVisit.startsWith(todayStr)).length;
+
+      document.getElementById('statTotalClients').textContent = total;
+      document.getElementById('statReadyToClaim').textContent = ready;
+      document.getElementById('statStampsToday').textContent = stampsToday;
+
+      document.getElementById('countAll').textContent = total;
+      document.getElementById('countReady').textContent = ready;
+      
+      const closeCount = clients.filter(c => {
+        const target = c.totalStampsTarget || settings.totalStamps;
+        const missing = target - c.stamps;
+        return missing > 0 && missing <= 2;
+      }).length;
+      document.getElementById('countClose').textContent = closeCount;
+
+      const welcomeCount = clients.filter(c => c.isWelcomeBonus).length;
+      document.getElementById('countWelcome').textContent = welcomeCount;
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      
+      // Actualizar estilo botones de filtro
+      const buttons = {
+        all: document.getElementById('filterBtnAll'),
+        ready: document.getElementById('filterBtnReady'),
+        close: document.getElementById('filterBtnClose'),
+        welcome: document.getElementById('filterBtnWelcome')
+      };
+
+      Object.keys(buttons).forEach(key => {
+        if (key === filter) {
+          buttons[key].className = 'px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black whitespace-nowrap transition-colors';
+        } else {
+          buttons[key].className = 'px-3 py-1.5 rounded-xl bg-[#1E293B] text-slate-300 border border-slate-700 hover:border-amber-500/40 whitespace-nowrap transition-colors';
+        }
+      });
+
+      renderClientsList();
+    }
+
+    function handleSearch() {
+      searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+      renderClientsList();
+    }
+
+    function renderClientsList() {
+      const container = document.getElementById('clientsList');
+      container.innerHTML = '';
+
+      let filtered = clients.filter(client => {
+        // Filtro por búsqueda
+        if (searchQuery) {
+          const matchName = client.name.toLowerCase().includes(searchQuery);
+          const matchPhone = client.phone.includes(searchQuery);
+          if (!matchName && !matchPhone) return false;
+        }
+
+        // Filtro por pestaña
+        const target = client.totalStampsTarget || settings.totalStamps;
+        if (currentFilter === 'ready') return client.stamps >= target;
+        if (currentFilter === 'close') {
+          const missing = target - client.stamps;
+          return missing > 0 && missing <= 2;
+        }
+        if (currentFilter === 'welcome') return client.isWelcomeBonus;
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-[#151F38] border border-slate-800 rounded-3xl p-8 text-center space-y-3">
+            <span class="text-4xl">🔍</span>
+            <h3 class="text-base font-black text-white">No se encontraron socios</h3>
+            <p class="text-xs text-slate-400 max-w-xs mx-auto">
+              ${searchQuery ? 'Probá con otro término de búsqueda o limpiá el filtro.' : 'Sumá tu primer cliente con el botón dorado "+ Nuevo Socio".'}
+            </p>
+            ${searchQuery ? '' : `
+              <button onclick="openNewClientModal()" class="mt-2 px-4 py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-xl active:scale-95 transition-all">
+                + Crear Primer Socio
+              </button>
+            `}
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(client => {
+        const target = client.totalStampsTarget || settings.totalStamps;
+        const isReady = client.stamps >= target;
+        const missing = Math.max(0, target - client.stamps);
+        const percent = Math.min(100, Math.round((client.stamps / target) * 100));
+
+        const card = document.createElement('div');
+        card.className = `bg-[#151F38] border ${isReady ? 'border-amber-500 gold-glow' : 'border-slate-800'} rounded-3xl p-4 sm:p-5 space-y-3.5 transition-all hover:border-amber-500/50`;
+        
+        // Generar grilla de sellos
+        let stampsHtml = '';
+        for (let i = 1; i <= target; i++) {
+          const stamped = i <= client.stamps;
+          stampsHtml += `
+            <div 
+              onclick="toggleDirectStamp('${client.id}', ${i})"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-sm font-black cursor-pointer transition-transform active:scale-90 ${stamped ? 'stamp-active' : 'stamp-empty'}"
+              title="${stamped ? 'Sello activo' : 'Sello pendiente'}"
+            >
+              ${stamped ? settings.stampEmoji : i}
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <!-- Header de Tarjeta -->
+          <div class="flex items-start justify-between">
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-black text-white">${escapeHtml(client.name)}</h3>
+                ${client.isWelcomeBonus ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded-full font-bold">🎁 Bono Inicial</span>' : ''}
+              </div>
+              <div class="text-xs text-slate-400 font-mono flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                <span>📱 ${escapeHtml(client.phone)}</span>
+                ${client.notes ? `<span class="text-slate-600">·</span> <span class="text-[11px] text-slate-300 italic font-sans break-words">${escapeHtml(client.notes)}</span>` : ''}
+              </div>
+            </div>
+
+            <!-- Menú de opciones (Ver / Borrar) -->
+            <div class="flex items-center gap-1">
+              <button onclick="showCustomerPass('${client.id}')" class="p-1.5 text-slate-400 hover:text-amber-400 rounded-lg hover:bg-slate-800" title="Ver Tarjeta Digital">
+                📱
+              </button>
+              <button onclick="deleteClientPrompt('${client.id}')" class="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-slate-800" title="Eliminar socio">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <!-- Grilla de Sellos -->
+          <div class="bg-[#0F172A] border border-slate-800/80 rounded-2xl p-3">
+            <div class="flex flex-wrap items-center justify-between gap-1.5">
+              ${stampsHtml}
+            </div>
+          </div>
+
+          <!-- Barra y Estado de Progreso -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span class="${isReady ? 'text-amber-400 font-black flex items-center gap-1' : 'text-slate-300'}">
+                ${isReady ? '🎉 ¡PREMIO LISTO PARA CANJEAR!' : `${client.stamps} de ${target} sellos (${missing === 1 ? '🔥 ¡Falta solo 1!' : `Faltan ${missing}`})`}
+              </span>
+              <span class="text-amber-400">${percent}%</span>
+            </div>
+            
+            <div class="w-full h-2 bg-[#0F172A] rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-500" style="width: ${percent}%;"></div>
+            </div>
+          </div>
+
+          <!-- Botones de Acción Inmediata -->
+          <div class="grid grid-cols-12 gap-2 pt-1 border-t border-slate-800/80">
+            <!-- Botón Sumar Sello (+1) -->
+            <button 
+              onclick="addStamp('${client.id}')"
+              class="col-span-5 py-2.5 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            >
+              <span>+ Sello</span>
+              <span class="text-base">${settings.stampEmoji}</span>
+            </button>
+
+            <!-- Botón Canjear Premio o Restar Sello -->
+            ${isReady ? `
+              <button 
+                onclick="openClaimModal('${client.id}')"
+                class="col-span-4 py-2.5 px-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-1 active:scale-95 transition-all pulse-vip"
+              >
+                <span>🎁 Canjear</span>
+              </button>
+            ` : `
+              <button 
+                onclick="subtractStamp('${client.id}')"
+                class="col-span-4 py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition-all"
+                title="Restar un sello en caso de error"
+              >
+                <span>- 1 Sello</span>
+              </button>
+            `}
+
+            <!-- Botón WhatsApp Directo -->
+            <button 
+              onclick="sendWhatsAppDirect('${client.id}')"
+              class="col-span-3 py-2.5 px-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition-all"
+              title="Avisar por WhatsApp"
+            >
+              <span>💬 WA</span>
+            </button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // ACCIONES DE SELLOS Y CANJE
+    // -------------------------------------------------------------
+    function addStamp(clientId) {
+      const client = clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      const target = client.totalStampsTarget || settings.totalStamps;
+      
+      if (client.stamps < target) {
+        client.stamps++;
+        client.lastVisit = new Date().toISOString();
+        saveClientsToStorage();
+        renderDashboard();
+
+        // Si completó la tarjeta, lanzar confeti y feedback
+        if (client.stamps >= target) {
+          triggerConfetti();
+          setTimeout(() => {
+            openClaimModal(clientId);
+          }, 400);
+        }
+
+        // Sincronizar en segundo plano
+        if (settings.autoSyncDrive) syncToGoogleDriveNow(false);
+      } else {
+        openClaimModal(clientId);
+      }
+    }
+
+    function subtractStamp(clientId) {
+      const client = clients.find(c => c.id === clientId);
+      if (!client || client.stamps <= 0) return;
+
+      client.stamps--;
+      saveClientsToStorage();
+      renderDashboard();
+    }
+
+    function toggleDirectStamp(clientId, stampIndex) {
+      const client = clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      client.stamps = stampIndex;
+      client.lastVisit = new Date().toISOString();
+      saveClientsToStorage();
+      renderDashboard();
+
+      const target = client.totalStampsTarget || settings.totalStamps;
+      if (client.stamps >= target) {
+        triggerConfetti();
+        setTimeout(() => openClaimModal(clientId), 400);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // CANJE DE PREMIOS (CLAIM MODAL)
+    // -------------------------------------------------------------
+    function openClaimModal(clientId) {
+      const client = clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      pendingClaimClientId = clientId;
+      document.getElementById('claimModalClientName').textContent = client.name;
+      document.getElementById('claimModalRewardTitle').textContent = settings.rewardTitle;
+      document.getElementById('claimModal').classList.remove('hidden');
+    }
+
+    function closeClaimModal() {
+      document.getElementById('claimModal').classList.add('hidden');
+      pendingClaimClientId = null;
+    }
+
+    function confirmRewardClaim(notifyWhatsApp = true) {
+      if (!pendingClaimClientId) return;
+      const client = clients.find(c => c.id === pendingClaimClientId);
+      if (!client) return;
+
+      // Reiniciar sellos y sumar al contador de premios
+      client.stamps = 0;
+      client.rewardsClaimed = (client.rewardsClaimed || 0) + 1;
+      client.lastClaimDate = new Date().toISOString();
+      
+      saveClientsToStorage();
+      closeClaimModal();
+      renderDashboard();
+      triggerConfetti();
+
+      if (notifyWhatsApp) {
+        const msg = `🎉 ¡Felicitaciones ${client.name}! Canjeaste tu premio: *${settings.rewardTitle}* en *${settings.bizName}* 🥳. ¡Muchas gracias por tu fidelidad! Ya empezó tu nueva tarjeta para seguir sumando premios.`;
+        openWhatsAppLink(client.phone, msg);
+      }
+
+      if (settings.autoSyncDrive) syncToGoogleDriveNow(false);
+    }
+
+    // -------------------------------------------------------------
+    // NUEVO CLIENTE (ESTRATEGIA DE PROGRESO CONCEDIDO)
+    // -------------------------------------------------------------
+    let currentNewClientWelcomeStamps = 4;
+
+    function openNewClientModal() {
+      currentNewClientWelcomeStamps = settings.welcomeStamps;
+      document.getElementById('newClientName').value = '';
+      document.getElementById('newClientPhone').value = '';
+      document.getElementById('newClientNotes').value = '';
+      document.getElementById('welcomeToggleCheckbox').checked = currentNewClientWelcomeStamps > 0;
+      document.getElementById('newClientWelcomeStampsCount').textContent = currentNewClientWelcomeStamps;
+      
+      updateWelcomeStampsPreview();
+      document.getElementById('newClientModal').classList.remove('hidden');
+      document.getElementById('newClientName').focus();
+    }
+
+    function closeNewClientModal() {
+      document.getElementById('newClientModal').classList.add('hidden');
+    }
+
+    function adjustNewClientWelcomeStamps(delta) {
+      const maxStamps = settings.totalStamps - 1;
+      currentNewClientWelcomeStamps = Math.max(0, Math.min(maxStamps, currentNewClientWelcomeStamps + delta));
+      document.getElementById('newClientWelcomeStampsCount').textContent = currentNewClientWelcomeStamps;
+      document.getElementById('welcomeToggleCheckbox').checked = currentNewClientWelcomeStamps > 0;
+      updateWelcomeStampsPreview();
+    }
+
+    function updateWelcomeStampsPreview() {
+      const isEnabled = document.getElementById('welcomeToggleCheckbox').checked;
+      const configBlock = document.getElementById('welcomeStampsConfigBlock');
+      const visualContainer = document.getElementById('welcomeStampsVisualPreview');
+      const textPreview = document.getElementById('welcomeStampsTextPreview');
+
+      if (!isEnabled) {
+        configBlock.classList.add('opacity-40', 'pointer-events-none');
+        visualContainer.innerHTML = '<span class="text-xs text-slate-500">Arrancará con 0 sellos</span>';
+        textPreview.textContent = `Empezará con 0 de ${settings.totalStamps} sellos.`;
+        return;
+      }
+
+      configBlock.classList.remove('opacity-40', 'pointer-events-none');
+      visualContainer.innerHTML = '';
+
+      for (let i = 1; i <= settings.totalStamps; i++) {
+        const stamped = i <= currentNewClientWelcomeStamps;
+        const dot = document.createElement('div');
+        dot.className = `w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black ${stamped ? 'stamp-active' : 'stamp-empty'}`;
+        dot.textContent = stamped ? settings.stampEmoji : i;
+        visualContainer.appendChild(dot);
+      }
+
+      const missing = settings.totalStamps - currentNewClientWelcomeStamps;
+      textPreview.textContent = `Empieza con ${currentNewClientWelcomeStamps} de ${settings.totalStamps} sellos regalados. ¡Le faltarán solo ${missing} para su premio!`;
+    }
+
+    function handleSaveNewClient(e) {
+      e.preventDefault();
+      const name = document.getElementById('newClientName').value.trim();
+      let phone = document.getElementById('newClientPhone').value.trim();
+      const notes = document.getElementById('newClientNotes').value.trim();
+      const isWelcome = document.getElementById('welcomeToggleCheckbox').checked;
+      const initialStamps = isWelcome ? currentNewClientWelcomeStamps : 0;
+
+      if (!name || !phone) return;
+
+      // Limpiar formato de teléfono para Argentina / Internacional
+      phone = cleanPhoneNumber(phone);
+
+      const newId = 'cli_' + Date.now();
+      const newClient = {
+        id: newId,
+        name: name,
+        phone: phone,
+        stamps: initialStamps,
+        totalStampsTarget: settings.totalStamps,
+        rewardsClaimed: 0,
+        isWelcomeBonus: isWelcome && initialStamps > 0,
+        welcomeStampsGranted: initialStamps,
+        notes: notes,
+        createdAt: new Date().toISOString(),
+        lastVisit: new Date().toISOString()
+      };
+
+      clients.unshift(newClient);
+      saveClientsToStorage();
+      closeNewClientModal();
+      renderDashboard();
+
+      // Efecto confeti de bienvenida
+      if (initialStamps > 0) triggerConfetti();
+
+      // Acción de WhatsApp según el botón pulsado
+      if (window.submitAction === 'whatsapp') {
+        sendWelcomeWhatsApp(newClient);
+      }
+
+      if (settings.autoSyncDrive) syncToGoogleDriveNow(false);
+    }
+
+    // -------------------------------------------------------------
+    // MENSAJES DE WHATSAPP AUTOMÁTICOS
+    // -------------------------------------------------------------
+    function cleanPhoneNumber(phone) {
+      let cleaned = phone.replace(/[^\d]/g, '');
+      if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+      if (cleaned.startsWith('15') && cleaned.length === 10) cleaned = '9' + cleaned.substring(2);
+      if (!cleaned.startsWith('54') && cleaned.length >= 10) cleaned = '549' + cleaned;
+      return cleaned;
+    }
+
+    function generateCardUrl(clientId) {
+      const baseUrl = window.location.origin + window.location.pathname;
+      return `${baseUrl}?tarjeta=${clientId}`;
+    }
+
+    function sendWelcomeWhatsApp(client) {
+      const cardUrl = generateCardUrl(client.id);
+      const target = client.totalStampsTarget || settings.totalStamps;
+      const missing = target - client.stamps;
+
+      let msg = '';
+      if (client.stamps > 0) {
+        msg = `¡Hola ${client.name}! 🎉 ¡Te damos la bienvenida a *${settings.bizName}*!\n\n` +
+              `🎁 Por sumarte a nuestro Club de Fidelidad te regalamos tus primeros *${client.stamps} sellos* de bienvenida ⭐.\n\n` +
+              `Ya tenés *${client.stamps} de ${target} sellos* listos. ¡Solo te faltan *${missing}* para reclamar tu premio: *${settings.rewardTitle}*! 🥳\n\n` +
+              `📲 Mirá tu tarjeta digital acá y guardala en tu celu:\n${cardUrl}`;
+      } else {
+        msg = `¡Hola ${client.name}! 🎉 ¡Te damos la bienvenida al Club de Fidelidad de *${settings.bizName}*!\n\n` +
+              `Ya tenés tu tarjeta digital activa para sumar sellos y ganar tu premio: *${settings.rewardTitle}* 🎁.\n\n` +
+              `📲 Mirá tu tarjeta acá:\n${cardUrl}`;
+      }
+
+      openWhatsAppLink(client.phone, msg);
+    }
+
+    function sendWhatsAppDirect(clientId) {
+      const client = clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      const target = client.totalStampsTarget || settings.totalStamps;
+      const missing = target - client.stamps;
+      const cardUrl = generateCardUrl(client.id);
+
+      let msg = '';
+      if (client.stamps >= target) {
+        msg = `🎉 ¡Hola ${client.name}! ¡Completaste tu tarjeta de fidelidad en *${settings.bizName}*! 🏆\n\n` +
+              `Ya podés pasar a canjear tu premio: *${settings.rewardTitle}* 🎁.\n\n` +
+              `Mostrá tu tarjeta en caja:\n${cardUrl}`;
+      } else if (missing === 1) {
+        msg = `¡Hola ${client.name}! 🔥 ¡Te falta solo *1 sello* para ganar tu premio en *${settings.bizName}*! 🎁\n\n` +
+              `Tenés ${client.stamps} de ${target} sellos. ¡Te esperamos para completar tu tarjeta!\n\n` +
+              `📲 Mirá tu tarjeta acá:\n${cardUrl}`;
+      } else {
+        msg = `¡Hola ${client.name}! 🌟 Tenés *${client.stamps} de ${target} sellos* en *${settings.bizName}*.\n\n` +
+              `¡Te faltan solo ${missing} para tu premio: *${settings.rewardTitle}*!\n\n` +
+              `📲 Mirá tu tarjeta digital acá:\n${cardUrl}`;
+      }
+
+      openWhatsAppLink(client.phone, msg);
+    }
+
+    function openWhatsAppLink(phone, message) {
+      const encodedMsg = encodeURIComponent(message);
+      const url = `https://wa.me/${phone}?text=${encodedMsg}`;
+      window.open(url, '_blank');
+    }
+
+    // -------------------------------------------------------------
+    // VISTA DEL CLIENTE / PASE DIGITAL (?tarjeta=ID)
+    // -------------------------------------------------------------
+    function showCustomerPass(clientId) {
+      const client = clients.find(c => c.id === clientId);
+      if (!client) {
+        alert('Tarjeta no encontrada.');
+        return;
+      }
+
+      // Ocultar vista admin y mostrar pase digital
+      document.getElementById('adminView').classList.add('hidden');
+      const passView = document.getElementById('customerPassView');
+      passView.classList.remove('hidden');
+
+      // Cargar datos del comercio y cliente
+      document.getElementById('customerPassBizName').textContent = settings.bizName;
+      updateLogosAndAvatars();
+      document.getElementById('customerCardWatermark').textContent = settings.stampEmoji;
+      document.getElementById('customerPassName').textContent = client.name;
+      document.getElementById('customerPassId').textContent = `Socio ID: #${client.phone.slice(-4) || 'VIP'}`;
+      document.getElementById('customerPassRewardLabel').textContent = `🎁 ${settings.rewardTitle}`;
+
+      const target = client.totalStampsTarget || settings.totalStamps;
+      const isReady = client.stamps >= target;
+      const missing = Math.max(0, target - client.stamps);
+      const percent = Math.min(100, Math.round((client.stamps / target) * 100));
+
+      document.getElementById('customerPassProgressText').textContent = `${client.stamps} / ${target}`;
+      document.getElementById('customerPassProgressBar').style.width = `${percent}%`;
+
+      // Mensaje Motivacional Personalizado
+      const titleEl = document.getElementById('customerPassMotivationTitle');
+      const descEl = document.getElementById('customerPassMotivationDesc');
+
+      if (isReady) {
+        titleEl.textContent = '🏆 ¡FELICITACIONES! TARJETA COMPLETA';
+        descEl.textContent = `Ya podés reclamar: ${settings.rewardTitle}. ¡Mostrá tu QR en caja!`;
+        triggerConfetti();
+      } else if (missing === 1) {
+        titleEl.textContent = '🔥 ¡ESTÁS A UN PASITO DE TU PREMIO!';
+        descEl.textContent = `Te falta solo 1 sello para reclamar: ${settings.rewardTitle}`;
+      } else if (client.isWelcomeBonus && client.stamps === client.welcomeStampsGranted) {
+        titleEl.textContent = '🎉 ¡Bienvenido! Recibiste tu Bono Inicial';
+        descEl.textContent = `Te regalamos tus primeros ${client.stamps} sellos. ¡Ya estás a mitad de camino!`;
+      } else {
+        titleEl.textContent = `Tenés ${client.stamps} de ${target} sellos acumulados`;
+        descEl.textContent = `Sumá ${missing} sellos más para reclamar tu premio.`;
+      }
+
+      // Generar grilla de sellos
+      const grid = document.getElementById('customerPassGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= target; i++) {
+        const stamped = i <= client.stamps;
+        const cell = document.createElement('div');
+        cell.className = `h-14 sm:h-16 rounded-2xl flex flex-col items-center justify-center font-black transition-all ${stamped ? 'stamp-active animate-stamp' : 'stamp-empty'}`;
+        cell.innerHTML = `
+          <span class="text-xl sm:text-2xl">${stamped ? settings.stampEmoji : ''}</span>
+          <span class="text-[10px] ${stamped ? 'text-slate-900 font-black' : 'text-slate-500'}">${i}</span>
+        `;
+        grid.appendChild(cell);
+      }
+
+      // Generar Código QR de Socio
+      const qrContainer = document.getElementById('customerPassQrContainer');
+      qrContainer.innerHTML = '';
+      try {
+        new QRCode(qrContainer, {
+          text: `CLIENT_ID:${client.id}|PHONE:${client.phone}`,
+          width: 140,
+          height: 140,
+          colorDark: "#0F172A",
+          colorLight: "#FFFFFF",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        qrContainer.innerHTML = `<span class="text-xs text-slate-800 font-mono font-bold">#${client.id}</span>`;
+      }
+
+      // Guardar ID activo para suma con PIN
+      window.activeCustomerPassId = clientId;
+    }
+
+    function exitCustomerPassView() {
+      // Limpiar URL si tenía parámetros
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+
+      document.getElementById('customerPassView').classList.add('hidden');
+      document.getElementById('adminView').classList.remove('hidden');
+      renderDashboard();
+    }
+
+    function promptMerchantPinForStamp() {
+      if (!window.activeCustomerPassId) return;
+      const enteredPin = prompt('Ingrese el PIN de seguridad del comercio (4 dígitos):');
+      if (enteredPin === null) return;
+
+      if (enteredPin.trim() === settings.pin) {
+        addStamp(window.activeCustomerPassId);
+        showCustomerPass(window.activeCustomerPassId);
+        alert('¡Sello sumado exitosamente! ⭐');
+      } else {
+        alert('PIN incorrecto.');
+      }
+    }
+
+    // -------------------------------------------------------------
+    // BÚSQUEDA RÁPIDA / ESCÁNER EN MOSTRADOR
+    // -------------------------------------------------------------
+    function openScannerModal() {
+      document.getElementById('quickSearchInput').value = '';
+      document.getElementById('quickSearchResults').innerHTML = '';
+      document.getElementById('scannerModal').classList.remove('hidden');
+      document.getElementById('quickSearchInput').focus();
+    }
+
+    function closeScannerModal() {
+      document.getElementById('scannerModal').classList.add('hidden');
+    }
+
+    function handleQuickSearchLive() {
+      const q = document.getElementById('quickSearchInput').value.trim().toLowerCase();
+      const resultsContainer = document.getElementById('quickSearchResults');
+      resultsContainer.innerHTML = '';
+
+      if (!q) return;
+
+      const matches = clients.filter(c => 
+        c.name.toLowerCase().includes(q) || 
+        c.phone.includes(q) || 
+        c.id.toLowerCase().includes(q)
+      );
+
+      if (matches.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">No hay socios con ese dato</p>';
+        return;
+      }
+
+      matches.forEach(c => {
+        const target = c.totalStampsTarget || settings.totalStamps;
+        const row = document.createElement('div');
+        row.className = 'bg-[#0F172A] border border-slate-700/80 rounded-2xl p-3 flex items-center justify-between';
+        row.innerHTML = `
+          <div>
+            <p class="text-xs font-black text-white">${escapeHtml(c.name)}</p>
+            <p class="text-[10px] text-slate-400 font-mono">📱 ${escapeHtml(c.phone)} · ${c.stamps}/${target} sellos</p>
+          </div>
+          <button 
+            onclick="addStamp('${c.id}'); closeScannerModal();"
+            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl active:scale-95 transition-all"
+          >
+            +1 Sello ⭐
+          </button>
+        `;
+        resultsContainer.appendChild(row);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // MODALES GENERALES
+    // -------------------------------------------------------------
+    function openSettingsModal() {
+      applySettingsToUI();
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function openBackupModal() {
+      document.getElementById('backupModal').classList.remove('hidden');
+    }
+
+    function closeBackupModal() {
+      document.getElementById('backupModal').classList.add('hidden');
+    }
+
+    function deleteClientPrompt(clientId) {
+      const client = clients.find(c => c.id === clientId);
+      if (!client) return;
+
+      if (confirm(`¿Estás seguro de eliminar a ${client.name}? Esta acción no se puede deshacer.`)) {
+        clients = clients.filter(c => c.id !== clientId);
+        saveClientsToStorage();
+        renderDashboard();
+        if (settings.autoSyncDrive) syncToGoogleDriveNow(false);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // COPIA DE SEGURIDAD EN GOOGLE DRIVE Y EXPORTACIÓN LOCAL
+    // -------------------------------------------------------------
+    async function syncToGoogleDriveNow(manual = true) {
+      const webhookUrl = settings.driveWebhookUrl || AUTO_DRIVE_WEBHOOK;
+      if (!webhookUrl) return;
+
+      const btn = document.getElementById('btnSyncNow');
+      const originalText = btn ? btn.innerHTML : '';
+      if (manual && btn) btn.innerHTML = '<span>☁️ Guardando en Google Drive...</span>';
+
+      try {
+        const backupObj = {
+          app: 'MicroApp Fidelizacion',
+          bizName: settings.bizName || 'Fidelizacion',
+          exportedAt: new Date().toISOString(),
+          settings: settings,
+          clients: clients
+        };
+
+        const jsonStr = JSON.stringify(backupObj, null, 2);
+        const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+        const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
+        const safeName = String(settings.bizName || 'Fidelizacion').replace(/[^a-zA-Z0-9]/g, '_');
+
+        const payload = {
+          action: 'save',
+          folder: AUTO_DRIVE_FOLDER,
+          fileName: `Respaldo_${safeName}_${timestamp}.json`,
+          contentBase64: b64,
+          mimeType: 'application/json'
+        };
+
+        await fetch(webhookUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        settings.lastBackupDate = new Date().toISOString();
+        saveSettingsToStorage();
+        updateBackupBadge();
+
+        if (manual) {
+          alert('¡Copia guardada con éxito en la carpeta "Copia de seguridad Fidelizacion" de Google Drive!');
+        }
+      } catch (err) {
+        if (manual) alert('Se guardó localmente. Se sincronizará con Google Drive apenas haya conexión.');
+      } finally {
+        if (manual && btn) btn.innerHTML = originalText;
+      }
+    }
+
+    function updateBackupBadge() {
+      const dot = document.getElementById('backupStatusDot');
+      const text = document.getElementById('lastBackupText');
+      if (settings.lastBackupDate) {
+        if (dot) dot.classList.remove('hidden');
+        if (text) text.textContent = `Última copia: ${new Date(settings.lastBackupDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} hs`;
+      }
+    }
+
+    function exportBackupJSON() {
+      const backupData = {
+        app: 'MicroApp Fidelizacion',
+        exportedAt: new Date().toISOString(),
+        settings: settings,
+        clients: clients
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ClubFidelidad_Respaldo_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportToExcelCSV() {
+      let csv = 'Nombre;Celular;Sellos;Meta;Premios Canjeados;Bono Bienvenida;Notas;Ultima Visita\n';
+      clients.forEach(c => {
+        const target = c.totalStampsTarget || settings.totalStamps;
+        csv += `"${c.name}";"${c.phone}";${c.stamps};${target};${c.rewardsClaimed || 0};"${c.isWelcomeBonus ? 'SI' : 'NO'}";"${(c.notes || '').replace(/"/g, '""')}";"${c.lastVisit || ''}"\n`;
+      });
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Socios_Fidelidad_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function handleRestoreFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (Array.isArray(data.clients)) {
+            if (confirm(`¿Restaurar ${data.clients.length} socios desde el archivo?`)) {
+              clients = data.clients;
+              if (data.settings) settings = { ...DEFAULT_SETTINGS, ...data.settings };
+              saveClientsToStorage();
+              saveSettingsToStorage();
+              applySettingsToUI();
+              renderDashboard();
+              closeBackupModal();
+              alert('¡Copia restaurada exitosamente!');
+            }
+          } else {
+            alert('El archivo no contiene un formato de respaldo válido.');
+          }
+        } catch (err) {
+          alert('Error al leer el archivo JSON.');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // -------------------------------------------------------------
+    // MOTOR DE CONFETI LIVIANO (100% OFFLINE EN CANVAS)
+    // -------------------------------------------------------------
+    function triggerConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const pieces = [];
+      const colors = ['#FDE047', '#EAB308', '#CA8A04', '#38BDF8', '#4ADE80', '#F43F5E', '#A855F7'];
+
+      for (let i = 0; i < 90; i++) {
+        pieces.push({
+          x: canvas.width / 2,
+          y: canvas.height * 0.4,
+          radius: Math.random() * 6 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() - 0.7) * 18,
+          gravity: 0.45,
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 10
+        });
+      }
+
+      let animationFrame;
+      let ticks = 0;
+
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.rotation += p.rotationSpeed;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.radius, -p.radius, p.radius * 2, p.radius * 2);
+          ctx.restore();
+        });
+
+        ticks++;
+        if (ticks < 120) {
+          animationFrame = requestAnimationFrame(render);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          cancelAnimationFrame(animationFrame);
+        }
+      }
+      render();
+    }
+
+    // -------------------------------------------------------------
+    // UTILIDADES
+    // -------------------------------------------------------------
+    function updateClock() {
+      try {
+        const now = new Date();
+        const str = now.toLocaleTimeString('es-AR', { 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          hour12: false, 
+          timeZone: 'America/Argentina/Buenos_Aires' 
+        });
+        document.getElementById('liveClock').textContent = `🇦🇷 ${str} hs`;
+      } catch (e) {
+        document.getElementById('liveClock').textContent = '🇦🇷 Activo';
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
