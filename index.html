@@ -1425,12 +1425,12 @@
 
       if (notifyWhatsApp) {
         const cardUrl = generateCardUrl(client.id);
-        const msg = `🎉 ¡Premio canjeado con éxito!\n\n` +
+        const msg = `*Premio canjeado con exito*\n\n` +
                     `Hola ${client.name}, ¡muchas gracias por tu fidelidad en *${settings.bizName}*!\n\n` +
-                    `Esperamos que disfrutes tu: *${settings.rewardTitle}* 🎁.\n` +
-                    `Ya empezó tu nueva tarjeta para que sigas sumando visitas y beneficios.\n\n` +
-                    `📲 Podés seguir tu progreso acá:\n${cardUrl}\n\n` +
-                    `¡Nos vemos en tu próxima visita! ✨`;
+                    `Esperamos que disfrutes tu: *${settings.rewardTitle}*.\n` +
+                    `Ya empezo tu nueva tarjeta para que sigas sumando visitas y beneficios.\n\n` +
+                    `Podes seguir tu progreso aca:\n${cardUrl}\n\n` +
+                    `¡Nos vemos en tu proxima visita!`;
         openWhatsAppLink(client.phone, msg);
       }
 
@@ -1564,25 +1564,24 @@
       const cardUrl = generateCardUrl(client.id);
       const target = client.totalStampsTarget || settings.totalStamps;
       const missing = Math.max(0, target - client.stamps);
-      const emoji = settings.stampEmoji || '⭐';
 
       let msg = '';
       if (client.stamps > 0) {
-        msg = `¡Hola ${client.name}! 🎉 ¡Te damos la bienvenida al Club de *${settings.bizName}*!\n\n` +
-              `🎁 *Bono de Bienvenida:* ¡Te regalamos tus primeros *${client.stamps} sellos* ${emoji} para empezar con todo!\n\n` +
-              `📊 *Tu Tarjeta Digital:*\n` +
+        msg = `¡Hola ${client.name}! Te damos la bienvenida al Club de *${settings.bizName}*.\n\n` +
+              `*Bono de Bienvenida:* Te regalamos tus primeros *${client.stamps} sellos* para empezar con todo.\n\n` +
+              `*Tu Tarjeta Digital:*\n` +
               `• Acumulados: *${client.stamps} de ${target} sellos*\n` +
               `• Te faltan: *solo ${missing} visitas*\n` +
-              `• Tu premio: *${settings.rewardTitle}* 🎁\n\n` +
-              `📲 Guardá tu tarjeta en tu celular desde este link:\n` +
+              `• Tu premio: *${settings.rewardTitle}*\n\n` +
+              `Guarda tu tarjeta en tu celular desde este link:\n` +
               `${cardUrl}\n\n` +
-              `¡Te esperamos pronto para sumar tu próximo sello! ✨`;
+              `¡Te esperamos pronto para sumar tu proximo sello!`;
       } else {
-        msg = `¡Hola ${client.name}! 🎉 ¡Te damos la bienvenida al Club de *${settings.bizName}*!\n\n` +
-              `Ya tenés tu tarjeta digital lista para sumar sellos con cada visita y ganar tu premio: *${settings.rewardTitle}* 🎁.\n\n` +
-              `📲 Guardá tu tarjeta en tu celular desde este link:\n` +
+        msg = `¡Hola ${client.name}! Te damos la bienvenida al Club de *${settings.bizName}*.\n\n` +
+              `Ya tenes tu tarjeta digital lista para sumar sellos con cada visita y ganar tu premio: *${settings.rewardTitle}*.\n\n` +
+              `Guarda tu tarjeta en tu celular desde este link:\n` +
               `${cardUrl}\n\n` +
-              `¡Te esperamos pronto! ✨`;
+              `¡Te esperamos pronto!`;
       }
 
       openWhatsAppLink(client.phone, msg);
@@ -1595,32 +1594,31 @@
       const target = client.totalStampsTarget || settings.totalStamps;
       const missing = Math.max(0, target - client.stamps);
       const cardUrl = generateCardUrl(client.id);
-      const emoji = settings.stampEmoji || '⭐';
 
       let msg = '';
       if (client.stamps >= target) {
-        msg = `¡Felicitaciones ${client.name}! 🏆\n\n` +
+        msg = `¡Felicitaciones ${client.name}!\n\n` +
               `¡Completaste todos los sellos de tu tarjeta en *${settings.bizName}*!\n\n` +
-              `🎁 *Tu premio ya está listo para canjear:*\n` +
+              `*Tu premio ya esta listo para canjear:*\n` +
               `*${settings.rewardTitle}*\n\n` +
-              `📲 Mostrá tu tarjeta o código QR en el mostrador para retirarlo:\n` +
+              `Mostra tu tarjeta en el mostrador para retirarlo:\n` +
               `${cardUrl}\n\n` +
-              `¡Muchas gracias por elegirnos siempre! 🥳`;
+              `¡Muchas gracias por elegirnos siempre!`;
       } else if (missing === 1) {
-        msg = `¡Hola ${client.name}! 🔥\n\n` +
-              `¡Estás a un solo paso de tu premio en *${settings.bizName}*!\n\n` +
-              `⭐ Tenés *${client.stamps} de ${target} sellos* acumulados.\n` +
-              `¡Solo te falta *1 visita* para reclamar: *${settings.rewardTitle}*! 🎁\n\n` +
-              `📲 Mirá tu tarjeta acá:\n` +
+        msg = `¡Hola ${client.name}!\n\n` +
+              `¡Estas a un solo paso de tu premio en *${settings.bizName}*!\n\n` +
+              `Tenes *${client.stamps} de ${target} sellos* acumulados.\n` +
+              `¡Solo te falta *1 visita* para reclamar: *${settings.rewardTitle}*!\n\n` +
+              `Mira tu tarjeta aca:\n` +
               `${cardUrl}\n\n` +
-              `¡Te esperamos para completar tu tarjeta! ✨`;
+              `¡Te esperamos para completar tu tarjeta!`;
       } else {
-        msg = `¡Hola ${client.name}! 🌟\n\n` +
-              `En *${settings.bizName}* ya tenés *${client.stamps} de ${target} sellos* ${emoji}.\n\n` +
-              `Te faltan *solo ${missing} visitas* para ganar tu premio: *${settings.rewardTitle}* 🎁.\n\n` +
-              `📲 Mirá tu progreso actualizado acá:\n` +
+        msg = `¡Hola ${client.name}!\n\n` +
+              `En *${settings.bizName}* ya tenes *${client.stamps} de ${target} sellos* acumulados.\n\n` +
+              `Te faltan *solo ${missing} visitas* para ganar tu premio: *${settings.rewardTitle}*.\n\n` +
+              `Mira tu progreso actualizado aca:\n` +
               `${cardUrl}\n\n` +
-              `¡Que tengas un excelente día! ✨`;
+              `¡Que tengas un excelente dia!`;
       }
 
       openWhatsAppLink(client.phone, msg);
@@ -1629,15 +1627,9 @@
     function openWhatsAppLink(phone, message) {
       const cleanPhone = String(phone).replace(/[^0-9]/g, '');
       const encodedMsg = encodeURIComponent(message);
-
-      // Si está en PC, abrir WhatsApp Web para evitar el bug de Windows Desktop que convierte los emojis en rombos.
-      // Si está en celular, usar api.whatsapp.com para abrir la app oficial nativa.
-      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const targetUrl = isMobile
-        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`
-        : `https://web.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`;
-
-      window.open(targetUrl, '_blank');
+      // Abre directamente tu aplicación instalada de WhatsApp en Windows o en el móvil
+      const url = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+      window.open(url, '_blank');
     }
 
     // -------------------------------------------------------------
