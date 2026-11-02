@@ -1423,7 +1423,13 @@
       triggerConfetti();
 
       if (notifyWhatsApp) {
-        const msg = `🎉 ¡Felicitaciones ${client.name}! Canjeaste tu premio: *${settings.rewardTitle}* en *${settings.bizName}* 🥳. ¡Muchas gracias por tu fidelidad! Ya empezó tu nueva tarjeta para seguir sumando premios.`;
+        const cardUrl = generateCardUrl(client.id);
+        const msg = `🎉 ¡Premio canjeado con éxito!\n\n` +
+                    `Hola ${client.name}, ¡muchas gracias por tu fidelidad en *${settings.bizName}*!\n\n` +
+                    `Esperamos que disfrutes tu: *${settings.rewardTitle}* 🎁.\n` +
+                    `Ya empezó tu nueva tarjeta para que sigas sumando visitas y beneficios.\n\n` +
+                    `📲 Podés seguir tu progreso acá:\n${cardUrl}\n\n` +
+                    `¡Nos vemos en tu próxima visita! ✨`;
         openWhatsAppLink(client.phone, msg);
       }
 
@@ -1544,6 +1550,9 @@
     }
 
     function generateCardUrl(clientId) {
+      if (!window.location.origin || window.location.origin === 'null' || window.location.protocol === 'file:') {
+        return `https://juancdgo.github.io/fidelizacion/?tarjeta=${clientId}`;
+      }
       const baseUrl = window.location.origin + window.location.pathname;
       return `${baseUrl}?tarjeta=${clientId}`;
     }
@@ -1551,18 +1560,26 @@
     function sendWelcomeWhatsApp(client) {
       const cardUrl = generateCardUrl(client.id);
       const target = client.totalStampsTarget || settings.totalStamps;
-      const missing = target - client.stamps;
+      const missing = Math.max(0, target - client.stamps);
+      const emoji = settings.stampEmoji || '⭐';
 
       let msg = '';
       if (client.stamps > 0) {
-        msg = `¡Hola ${client.name}! 🎉 ¡Te damos la bienvenida a *${settings.bizName}*!\n\n` +
-              `🎁 Por sumarte a nuestro Club de Fidelidad te regalamos tus primeros *${client.stamps} sellos* de bienvenida ⭐.\n\n` +
-              `Ya tenés *${client.stamps} de ${target} sellos* listos. ¡Solo te faltan *${missing}* para reclamar tu premio: *${settings.rewardTitle}*! 🥳\n\n` +
-              `📲 Mirá tu tarjeta digital acá y guardala en tu celu:\n${cardUrl}`;
+        msg = `¡Hola ${client.name}! 🎉 ¡Te damos la bienvenida al Club de *${settings.bizName}*!\n\n` +
+              `🎁 *Bono de Bienvenida:* ¡Te regalamos tus primeros *${client.stamps} sellos* ${emoji} para empezar con todo!\n\n` +
+              `📊 *Tu Tarjeta Digital:*\n` +
+              `• Acumulados: *${client.stamps} de ${target} sellos*\n` +
+              `• Te faltan: *solo ${missing} visitas*\n` +
+              `• Tu premio: *${settings.rewardTitle}* 🎁\n\n` +
+              `📲 Guardá tu tarjeta en tu celular desde este link:\n` +
+              `${cardUrl}\n\n` +
+              `¡Te esperamos pronto para sumar tu próximo sello! ✨`;
       } else {
-        msg = `¡Hola ${client.name}! 🎉 ¡Te damos la bienvenida al Club de Fidelidad de *${settings.bizName}*!\n\n` +
-              `Ya tenés tu tarjeta digital activa para sumar sellos y ganar tu premio: *${settings.rewardTitle}* 🎁.\n\n` +
-              `📲 Mirá tu tarjeta acá:\n${cardUrl}`;
+        msg = `¡Hola ${client.name}! 🎉 ¡Te damos la bienvenida al Club de *${settings.bizName}*!\n\n` +
+              `Ya tenés tu tarjeta digital lista para sumar sellos con cada visita y ganar tu premio: *${settings.rewardTitle}* 🎁.\n\n` +
+              `📲 Guardá tu tarjeta en tu celular desde este link:\n` +
+              `${cardUrl}\n\n` +
+              `¡Te esperamos pronto! ✨`;
       }
 
       openWhatsAppLink(client.phone, msg);
@@ -1573,31 +1590,51 @@
       if (!client) return;
 
       const target = client.totalStampsTarget || settings.totalStamps;
-      const missing = target - client.stamps;
+      const missing = Math.max(0, target - client.stamps);
       const cardUrl = generateCardUrl(client.id);
+      const emoji = settings.stampEmoji || '⭐';
 
       let msg = '';
       if (client.stamps >= target) {
-        msg = `🎉 ¡Hola ${client.name}! ¡Completaste tu tarjeta de fidelidad en *${settings.bizName}*! 🏆\n\n` +
-              `Ya podés pasar a canjear tu premio: *${settings.rewardTitle}* 🎁.\n\n` +
-              `Mostrá tu tarjeta en caja:\n${cardUrl}`;
+        msg = `¡Felicitaciones ${client.name}! 🏆\n\n` +
+              `¡Completaste todos los sellos de tu tarjeta en *${settings.bizName}*!\n\n` +
+              `🎁 *Tu premio ya está listo para canjear:*\n` +
+              `*${settings.rewardTitle}*\n\n` +
+              `📲 Mostrá tu tarjeta o código QR en el mostrador para retirarlo:\n` +
+              `${cardUrl}\n\n` +
+              `¡Muchas gracias por elegirnos siempre! 🥳`;
       } else if (missing === 1) {
-        msg = `¡Hola ${client.name}! 🔥 ¡Te falta solo *1 sello* para ganar tu premio en *${settings.bizName}*! 🎁\n\n` +
-              `Tenés ${client.stamps} de ${target} sellos. ¡Te esperamos para completar tu tarjeta!\n\n` +
-              `📲 Mirá tu tarjeta acá:\n${cardUrl}`;
+        msg = `¡Hola ${client.name}! 🔥\n\n` +
+              `¡Estás a un solo paso de tu premio en *${settings.bizName}*!\n\n` +
+              `⭐ Tenés *${client.stamps} de ${target} sellos* acumulados.\n` +
+              `¡Solo te falta *1 visita* para reclamar: *${settings.rewardTitle}*! 🎁\n\n` +
+              `📲 Mirá tu tarjeta acá:\n` +
+              `${cardUrl}\n\n` +
+              `¡Te esperamos para completar tu tarjeta! ✨`;
       } else {
-        msg = `¡Hola ${client.name}! 🌟 Tenés *${client.stamps} de ${target} sellos* en *${settings.bizName}*.\n\n` +
-              `¡Te faltan solo ${missing} para tu premio: *${settings.rewardTitle}*!\n\n` +
-              `📲 Mirá tu tarjeta digital acá:\n${cardUrl}`;
+        msg = `¡Hola ${client.name}! 🌟\n\n` +
+              `En *${settings.bizName}* ya tenés *${client.stamps} de ${target} sellos* ${emoji}.\n\n` +
+              `Te faltan *solo ${missing} visitas* para ganar tu premio: *${settings.rewardTitle}* 🎁.\n\n` +
+              `📲 Mirá tu progreso actualizado acá:\n` +
+              `${cardUrl}\n\n` +
+              `¡Que tengas un excelente día! ✨`;
       }
 
       openWhatsAppLink(client.phone, msg);
     }
 
     function openWhatsAppLink(phone, message) {
+      const cleanPhone = String(phone).replace(/[^0-9]/g, '');
       const encodedMsg = encodeURIComponent(message);
-      const url = `https://wa.me/${phone}?text=${encodedMsg}`;
-      window.open(url, '_blank');
+
+      // Si está en PC, abrir WhatsApp Web para evitar el bug de Windows Desktop que convierte los emojis en rombos.
+      // Si está en celular, usar api.whatsapp.com para abrir la app oficial nativa.
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const targetUrl = isMobile
+        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`
+        : `https://web.whatsapp.com/send?phone=${cleanPhone}&text=${encodedMsg}`;
+
+      window.open(targetUrl, '_blank');
     }
 
     // -------------------------------------------------------------
