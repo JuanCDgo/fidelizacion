@@ -835,12 +835,13 @@
       updateClock();
       setInterval(updateClock, 30000);
 
-      // Revisar si se entra en Modo Pase Digital del Cliente (URL con ?tarjeta=ID o ?c=ID)
+      // Revisar si se entra en Modo Pase Digital del Cliente (URL con ?c=ID o ?tarjeta=ID)
       const urlParams = new URLSearchParams(window.location.search);
-      const customerCardId = urlParams.get('tarjeta') || urlParams.get('c') || urlParams.get('card');
+      const rawId = urlParams.get('c') || urlParams.get('tarjeta') || urlParams.get('card');
       
-      if (customerCardId) {
-        showCustomerPass(customerCardId);
+      if (rawId) {
+        const found = clients.find(c => c.id === rawId || c.id === 'cli_' + rawId || c.id.endsWith(rawId) || c.phone.endsWith(rawId));
+        showCustomerPass(found ? found.id : rawId);
       } else {
         renderDashboard();
       }
@@ -1550,11 +1551,13 @@
     }
 
     function generateCardUrl(clientId) {
+      // Usar código corto para que el enlace sea compacto en WhatsApp
+      const shortCode = String(clientId).replace(/^cli_/, '').slice(-5);
       if (!window.location.origin || window.location.origin === 'null' || window.location.protocol === 'file:') {
-        return `https://juancdgo.github.io/fidelizacion/?tarjeta=${clientId}`;
+        return `https://juancdgo.github.io/fidelizacion/?c=${shortCode}`;
       }
       const baseUrl = window.location.origin + window.location.pathname;
-      return `${baseUrl}?tarjeta=${clientId}`;
+      return `${baseUrl}?c=${shortCode}`;
     }
 
     function sendWelcomeWhatsApp(client) {
