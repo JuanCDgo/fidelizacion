@@ -6,12 +6,10 @@ Aplicación web progresiva (PWA / SPA) ultra ligera construida en Vanilla JavaSc
 
 ## 🏗️ 1. Arquitectura y Seguridad
 
-### 🔒 Control de Acceso y Blindaje de Privacidad
-- **Separación de Contextos (Cliente vs. Comercio):**
-  - **Modo Cliente (`?c=ID...`):** Al abrir un enlace de pase, la aplicación renderiza exclusivamente la tarjeta digital de socio (`#customerPassView`). **No existe botón de volver** ni acceso a la base de clientes.
-  - **Modo Comercio:** Al ingresar a la raíz de la aplicación sin parámetros de cliente, el sistema exige validación de identidad mediante **PIN de 4 dígitos** (`#pinLockView`).
-  - **Persistencia de Sesión Segura:** La autenticación administrativa se almacena en `sessionStorage` (`fidelizacion_admin_auth = 'true'`), lo que permite al comerciante operar sin reingresar el PIN en cada recarga durante su jornada de trabajo, pero se cierra automáticamente al cerrar la pestaña o tocar el botón **`🔒`** en la cabecera.
-- **Portabilidad Total de Pases:** Los enlaces generados por WhatsApp incluyen los parámetros del cliente (`c`, `nom`, `tel`, `s`, `t`, `b`, `e`, `p`). Esto garantiza que **cualquier teléfono móvil** renderice la tarjeta personalizada al instante, aun sin tener datos previos en su memoria local.
+### 🔒 Blindaje de Privacidad y Modo Tarjeta Directa
+- **Separación Estricta de Contextos (Cliente vs. Comercio):**
+  - **Modo Cliente (`?c=ID...` y Acceso Directo PWA):** Al abrir el enlace de su tarjeta o iniciar desde el Acceso Directo en la pantalla de su teléfono, la app guarda la tarjeta en el dispositivo (`fidelizacion_saved_pass`) y fija el dispositivo en `fidelizacion_mode = 'customer'`. Renderiza **únicamente** la tarjeta digital (`#customerPassView`) sin pedir claves, sin botones de volver y sin ninguna vía de entrada al panel del comercio.
+  - **Portabilidad Total de Pases:** Los enlaces generados por WhatsApp incluyen los parámetros del cliente (`c`, `nom`, `tel`, `s`, `t`, `b`, `e`, `p`). Esto garantiza que **cualquier teléfono móvil** renderice la tarjeta personalizada al instante y su acceso directo lleve siempre derecho a la tarjeta.
 
 ---
 

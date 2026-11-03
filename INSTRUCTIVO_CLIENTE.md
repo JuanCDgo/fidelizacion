@@ -17,14 +17,12 @@
 
 ---
 
-## 🔒 2. Seguridad: Tu PIN de Acceso al Comercio
+## 📲 2. Acceso Directo de la Tarjeta en el Teléfono del Cliente
 
-- Para proteger la información de tus clientes y que nadie acceda a tu panel de administración, la app cuenta con una **Pantalla de Bloqueo por PIN**:
-  - Al abrir la aplicación, ingresá tu PIN de 4 dígitos en el teclado en pantalla (o con el teclado de tu computadora).
-  - **PIN inicial por defecto:** `1234`.
-  - Podés cambiar tu PIN en cualquier momento desde **Ajustes ⚙️** (icono de engranaje).
-  - Al poner el PIN correcto, la sesión queda abierta en tu dispositivo durante toda tu jornada.
-  - Podés bloquear la sesión manualmente tocando el icono del candado **`🔒`** en la cabecera cuando te ausentes del mostrador.
+- Cuando el cliente abre su enlace de WhatsApp:
+  - Entra **directo a su tarjeta digital**, sin pedir claves ni pantallas intermedias.
+  - Al tocar **`📲 Guardar en Celular`** -> **`Agregar a la Pantalla Principal`**, se le crea el icono en su teléfono.
+  - Cada vez que el cliente toque ese acceso directo en su celular, **abre directamente la vista de su tarjeta y punto**. No tiene botón de volver ni forma de entrar a la aplicación del comercio.
 
 ---
 

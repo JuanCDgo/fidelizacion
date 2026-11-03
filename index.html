@@ -148,11 +148,6 @@
 
           <!-- Acciones Rápidas del Header -->
           <div class="flex items-center gap-2">
-            <!-- Botón Bloquear Sesión -->
-            <button onclick="lockAdminSession()" class="w-10 h-10 rounded-full bg-[#1E293B] border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 active:scale-95 transition-transform" title="Bloquear con PIN (Cerrar sesión)">
-              <span class="text-base">🔒</span>
-            </button>
-
             <!-- Botón Copia Drive -->
             <button onclick="openBackupModal()" class="w-10 h-10 rounded-full bg-[#1E293B] border border-slate-700 flex items-center justify-center text-amber-400 hover:bg-slate-700 active:scale-95 transition-transform relative" title="Copia de seguridad">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,53 +254,6 @@
 
 
     
-    <!-- ============================================================ -->
-    <!-- VISTA DE BLOQUEO: ACCESO COMERCIO CON PIN                   -->
-    <!-- ============================================================ -->
-    <div id="pinLockView" class="flex-1 flex flex-col items-center justify-center p-6 hidden min-h-[85vh]">
-      <div class="bg-gradient-to-b from-[#1E293B] to-[#0F172A] border border-slate-700/80 text-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 text-center">
-        <!-- Icono -->
-        <div class="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-3xl shadow-inner">
-          🔒
-        </div>
-
-        <div>
-          <h2 class="text-lg font-black text-white" id="pinLockBizTitle">Panel del Comercio</h2>
-          <p class="text-xs text-slate-400 mt-1">Ingrese su PIN de seguridad para acceder a clientes y ajustes</p>
-        </div>
-
-        <!-- Indicador de PIN (4 dígitos) -->
-        <div class="flex items-center justify-center gap-3 py-1">
-          <span id="pinDot-1" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all"></span>
-          <span id="pinDot-2" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all"></span>
-          <span id="pinDot-3" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all"></span>
-          <span id="pinDot-4" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all"></span>
-        </div>
-
-        <p id="pinLockErrorMsg" class="text-xs text-rose-400 font-bold min-h-[1.2rem] transition-opacity opacity-0">
-          PIN incorrecto. Reintente.
-        </p>
-
-        <!-- Teclado Numérico Táctil -->
-        <div class="grid grid-cols-3 gap-2.5 max-w-[260px] mx-auto pt-1">
-          <button type="button" onclick="pressPinDigit('1')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">1</button>
-          <button type="button" onclick="pressPinDigit('2')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">2</button>
-          <button type="button" onclick="pressPinDigit('3')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">3</button>
-          <button type="button" onclick="pressPinDigit('4')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">4</button>
-          <button type="button" onclick="pressPinDigit('5')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">5</button>
-          <button type="button" onclick="pressPinDigit('6')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">6</button>
-          <button type="button" onclick="pressPinDigit('7')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">7</button>
-          <button type="button" onclick="pressPinDigit('8')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">8</button>
-          <button type="button" onclick="pressPinDigit('9')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">9</button>
-          <button type="button" onclick="clearPinInput()" class="h-14 rounded-2xl bg-slate-900/60 hover:bg-slate-800 active:scale-95 text-slate-400 font-bold text-xs border border-slate-800 transition-all flex items-center justify-center">Borrar</button>
-          <button type="button" onclick="pressPinDigit('0')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">0</button>
-          <button type="button" onclick="deletePinDigit()" class="h-14 rounded-2xl bg-slate-900/60 hover:bg-slate-800 active:scale-95 text-slate-400 font-bold text-lg border border-slate-800 transition-all flex items-center justify-center">⌫</button>
-        </div>
-
-        <p class="text-[11px] text-slate-500 pt-2">PIN inicial por defecto: <code class="text-amber-400 font-mono font-bold">1234</code></p>
-      </div>
-    </div>
-
     <!-- ============================================================ -->
     <!-- VISTA 2: PASE DIGITAL / TARJETA DEL CLIENTE (VISTA MÓVIL)     -->
     <!-- ============================================================ -->
@@ -987,16 +935,30 @@
       updateClock();
       setInterval(updateClock, 30000);
 
-      // Revisar si se entra en Modo Pase Digital del Cliente
       const urlParams = new URLSearchParams(window.location.search);
+
+      // Si el dueño entra explícitamente con ?admin=1, desbloquea modo comercio
+      if (urlParams.get('admin') === '1') {
+        localStorage.setItem('fidelizacion_mode', 'admin');
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        document.getElementById('customerPassView').classList.add('hidden');
+        document.getElementById('adminView').classList.remove('hidden');
+        renderDashboard();
+        return;
+      }
+
       const rawId = urlParams.get('c') || urlParams.get('tarjeta') || urlParams.get('card');
       const paramName = urlParams.get('nom') || urlParams.get('n');
 
+      // Detectar si se abrió desde el icono de Acceso Directo en la pantalla del teléfono
+      const isStandaloneShortcut = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      const isCustomerLocked = localStorage.getItem('fidelizacion_mode') === 'customer';
+
       if (rawId || paramName) {
-        // Buscar si existe en la base local del dispositivo
+        // 1. Entró por link de tarjeta (?c=...)
         let client = clients.find(c => c.id === rawId || c.id === 'cli_' + rawId || c.id.endsWith(rawId) || c.phone.endsWith(rawId));
         
-        // Si no existe (ej. teléfono del cliente que no tiene la BD del comercio), armar pase portable
         if (!client) {
           client = {
             id: rawId || 'VIP',
@@ -1010,13 +972,40 @@
             isWelcomeBonus: false,
             welcomeStampsGranted: 0
           };
+        } else {
+          // Si ya existía en local pero vienen datos actualizados en la URL, usar los de la URL si son mayores
+          if (urlParams.get('s') !== null) client.stamps = parseInt(urlParams.get('s')) || client.stamps;
+          if (urlParams.get('b')) client.bizName = urlParams.get('b');
+          if (urlParams.get('e')) client.stampEmoji = urlParams.get('e');
+          if (urlParams.get('p')) client.rewardTitle = urlParams.get('p');
         }
 
-        // Modo Cliente: NUNCA se muestra banner de comercio ni botón de volver
+        // Guardar tarjeta en el teléfono y fijar Modo Cliente para que el Acceso Directo siempre abra la tarjeta directo
+        localStorage.setItem('fidelizacion_saved_pass', JSON.stringify(client));
+        localStorage.setItem('fidelizacion_mode', 'customer');
+
         showCustomerPass(client, false);
+      } else if (isStandaloneShortcut || isCustomerLocked) {
+        // 2. Abrió desde el Acceso Directo del teléfono o el dispositivo está en Modo Cliente:
+        // Va DIRECTO a la tarjeta sin pedir clave ni mostrar jamás el panel del programa
+        let savedCard = null;
+        try {
+          const rawSaved = localStorage.getItem('fidelizacion_saved_pass') || localStorage.getItem('fidelizacion_last_viewed_pass');
+          if (rawSaved) savedCard = JSON.parse(rawSaved);
+        } catch (e) {}
+
+        if (!savedCard && clients.length > 0) {
+          savedCard = clients[0];
+        }
+
+        if (savedCard) {
+          showCustomerPass(savedCard, false);
+        } else {
+          renderDashboard();
+        }
       } else {
-        // Modo Comercio: verificar PIN de seguridad
-        checkAdminPinAuth();
+        // 3. Modo Comercio normal
+        renderDashboard();
       }
 
       // Sincronización silenciosa en background al iniciar
@@ -1820,119 +1809,6 @@
     // VISTA DEL CLIENTE / PASE DIGITAL (?tarjeta=ID)
     // -------------------------------------------------------------
     // ==========================================
-    // SEGURIDAD: CONTROL DE ACCESO CON PIN AL PANEL
-    // ==========================================
-    let enteredPinBuffer = '';
-
-    function checkAdminPinAuth() {
-      const isAuth = sessionStorage.getItem('fidelizacion_admin_auth') === 'true';
-      const pinLockView = document.getElementById('pinLockView');
-      const adminView = document.getElementById('adminView');
-      const passView = document.getElementById('customerPassView');
-
-      if (isAuth) {
-        if (pinLockView) pinLockView.classList.add('hidden');
-        if (passView) passView.classList.add('hidden');
-        if (adminView) adminView.classList.remove('hidden');
-        renderDashboard();
-      } else {
-        if (adminView) adminView.classList.add('hidden');
-        if (passView) passView.classList.add('hidden');
-        if (pinLockView) {
-          pinLockView.classList.remove('hidden');
-          const title = document.getElementById('pinLockBizTitle');
-          if (title) title.textContent = settings.bizName || 'Panel del Comercio';
-        }
-        resetPinLockInput();
-      }
-    }
-
-    function lockAdminSession() {
-      sessionStorage.removeItem('fidelizacion_admin_auth');
-      checkAdminPinAuth();
-      showToast('Sesión del comercio bloqueada 🔒', '🔒');
-    }
-
-    
-    // Soporte para teclado físico en pantalla de bloqueo PIN
-    window.addEventListener('keydown', (e) => {
-      const pinLock = document.getElementById('pinLockView');
-      if (pinLock && !pinLock.classList.contains('hidden')) {
-        if (e.key >= '0' && e.key <= '9') {
-          pressPinDigit(e.key);
-        } else if (e.key === 'Backspace') {
-          deletePinDigit();
-        } else if (e.key === 'Escape') {
-          clearPinInput();
-        }
-      }
-    });
-
-    function pressPinDigit(digit) {
-      if (enteredPinBuffer.length >= 4) return;
-      enteredPinBuffer += digit;
-      updatePinDots();
-
-      if (enteredPinBuffer.length === 4) {
-        setTimeout(submitPinAuth, 150);
-      }
-    }
-
-    function deletePinDigit() {
-      if (enteredPinBuffer.length > 0) {
-        enteredPinBuffer = enteredPinBuffer.slice(0, -1);
-        updatePinDots();
-      }
-    }
-
-    function clearPinInput() {
-      enteredPinBuffer = '';
-      updatePinDots();
-    }
-
-    function resetPinLockInput() {
-      enteredPinBuffer = '';
-      updatePinDots();
-      const errEl = document.getElementById('pinLockErrorMsg');
-      if (errEl) errEl.classList.add('opacity-0');
-    }
-
-    function updatePinDots() {
-      for (let i = 1; i <= 4; i++) {
-        const dot = document.getElementById(`pinDot-${i}`);
-        if (!dot) continue;
-        if (i <= enteredPinBuffer.length) {
-          dot.className = 'w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-400 scale-110 transition-all';
-        } else {
-          dot.className = 'w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all';
-        }
-      }
-    }
-
-    function submitPinAuth() {
-      const targetPin = (settings.pin || '1234').trim();
-      const errEl = document.getElementById('pinLockErrorMsg');
-
-      if (enteredPinBuffer === targetPin) {
-        sessionStorage.setItem('fidelizacion_admin_auth', 'true');
-        if (errEl) errEl.classList.add('opacity-0');
-        checkAdminPinAuth();
-        showToast('Acceso al panel concedido ✓', '🔑');
-      } else {
-        if (errEl) errEl.classList.remove('opacity-0');
-        const dotsContainer = document.getElementById('pinDot-1')?.parentElement;
-        if (dotsContainer) {
-          dotsContainer.classList.add('animate-pulse');
-          setTimeout(() => dotsContainer.classList.remove('animate-pulse'), 400);
-        }
-        setTimeout(() => {
-          clearPinInput();
-        }, 500);
-      }
-    }
-
-    
-    // ==========================================
     // TOAST NOTIFICATIONS
     // ==========================================
     function showToast(message, icon = '✓') {
@@ -1966,6 +1842,11 @@
     });
 
     function openSavePassModal() {
+      // Asegurar que la tarjeta activa quede guardada para el acceso directo
+      if (window.activeCustomerCardObject) {
+        localStorage.setItem('fidelizacion_saved_pass', JSON.stringify(window.activeCustomerCardObject));
+      }
+
       const modal = document.getElementById('savePassModal');
       if (!modal) return;
 
@@ -1976,6 +1857,10 @@
       const iosBox = document.getElementById('savePassIosBox');
       const pcBox = document.getElementById('savePassPcBox');
 
+      const passUrl = window.activeCustomerCardObject
+        ? generateCardUrl(window.activeCustomerCardObject)
+        : window.location.href;
+
       if (isIOS) {
         if (iosBox) iosBox.classList.remove('hidden');
         if (androidBox) androidBox.classList.add('hidden');
@@ -1985,7 +1870,6 @@
         if (iosBox) iosBox.classList.add('hidden');
         if (pcBox) pcBox.classList.add('hidden');
       } else {
-        // En PC / Desktop: Mostrar QR para escanear con el celular
         if (pcBox) {
           pcBox.classList.remove('hidden');
           const qrContainer = document.getElementById('savePassPcQr');
@@ -1993,7 +1877,7 @@
             qrContainer.innerHTML = '';
             try {
               new QRCode(qrContainer, {
-                text: window.location.href,
+                text: passUrl,
                 width: 150,
                 height: 150,
                 colorDark: '#0F172A',
@@ -2001,7 +1885,7 @@
                 correctLevel: QRCode.CorrectLevel.M
               });
             } catch (err) {
-              qrContainer.innerHTML = `<img src="https://quickchart.io/qr?text=${encodeURIComponent(window.location.href)}&size=150" alt="QR Pase" class="w-36 h-36 rounded-xl">`;
+              qrContainer.innerHTML = `<img src="https://quickchart.io/qr?text=${encodeURIComponent(passUrl)}&size=150" alt="QR Pase" class="w-36 h-36 rounded-xl">`;
             }
           }
         }
@@ -2018,56 +1902,52 @@
     }
 
     function triggerInstallPwa() {
+      // Guardar tarjeta activa como predeterminada del acceso directo
+      if (window.activeCustomerCardObject) {
+        localStorage.setItem('fidelizacion_saved_pass', JSON.stringify(window.activeCustomerCardObject));
+        localStorage.setItem('fidelizacion_mode', 'customer');
+      }
+
       if (deferredPwaPrompt) {
         deferredPwaPrompt.prompt();
         deferredPwaPrompt.userChoice.then((choiceResult) => {
           if (choiceResult.outcome === 'accepted') {
-            showToast('¡Acceso directo agregado a tu pantalla! 📲', '⭐');
+            showToast('¡Acceso directo de tu tarjeta creado en tu pantalla! 📲', '⭐');
             closeSavePassModal();
           }
           deferredPwaPrompt = null;
         });
       } else {
-        // Si el navegador ya lo instaló o no soporta prompt automático
-        showToast('Tocá los 3 puntos (⋮) de Chrome y elegí "Agregar a la pantalla principal"', 'ℹ️');
+        showToast('Tocá los 3 puntos (⋮) arriba en Chrome y elegí "Agregar a la pantalla principal"', '📲');
       }
     }
 
     function sharePassWhatsAppSelf() {
-      const url = window.location.href;
+      const passUrl = window.activeCustomerCardObject
+        ? generateCardUrl(window.activeCustomerCardObject)
+        : window.location.href;
       const msg = `Mi Tarjeta Digital de Fidelidad:
-${url}`;
+${passUrl}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     function copyPassDirectLink() {
-      const url = window.location.href;
+      const passUrl = window.activeCustomerCardObject
+        ? generateCardUrl(window.activeCustomerCardObject)
+        : window.location.href;
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('¡Enlace copiado al portapapeles! ✓', '📋');
+        navigator.clipboard.writeText(passUrl).then(() => {
+          showToast('¡Enlace de la tarjeta copiado! ✓', '📋');
           const btn = document.getElementById('btnCopyPassDirect');
           if (btn) btn.innerHTML = '<span>✓ ¡Enlace Copiado!</span>';
           setTimeout(() => {
             if (btn) btn.innerHTML = '<span>📋 Copiar Enlace Directo</span>';
           }, 2500);
         }).catch(() => {
-          prompt('Copia tu enlace:', url);
+          prompt('Copia tu enlace:', passUrl);
         });
       } else {
-        prompt('Copia tu enlace:', url);
-      }
-    }
-
-    function shareCustomerCard() {
-      const url = window.location.href;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Enlace de tu pase copiado al portapapeles 📋', '📋');
-        }).catch(() => {
-          prompt('Copia tu enlace oficial:', url);
-        });
-      } else {
-        prompt('Copia tu enlace oficial:', url);
+        prompt('Copia tu enlace:', passUrl);
       }
     }
 
@@ -2087,15 +1967,22 @@ ${url}`;
         return;
       }
 
-      // Ocultar vista admin y pantalla de bloqueo
-      document.getElementById('adminView').classList.add('hidden');
-      const pinLock = document.getElementById('pinLockView');
-      if (pinLock) pinLock.classList.add('hidden');
+      // Guardar referencia de la tarjeta activa para el Acceso Directo
+      window.activeCustomerCardObject = client;
+      localStorage.setItem('fidelizacion_last_viewed_pass', JSON.stringify(client));
+      if (!isPreview) {
+        localStorage.setItem('fidelizacion_saved_pass', JSON.stringify(client));
+        localStorage.setItem('fidelizacion_mode', 'customer');
+      }
+
+      // Ocultar absolutamente el panel de administración
+      const adminView = document.getElementById('adminView');
+      if (adminView) adminView.classList.add('hidden');
 
       const passView = document.getElementById('customerPassView');
       passView.classList.remove('hidden');
 
-      // Banner de vista previa (solo visible si el comercio está previsualizando desde su panel)
+      // Banner de vista previa (SOLO si el comerciante tocó el ojito desde adentro del panel)
       const previewBanner = document.getElementById('passPreviewBanner');
       if (previewBanner) {
         if (isPreview) {
@@ -2178,30 +2065,33 @@ ${url}`;
     }
 
     function exitCustomerPassView() {
-      // Solo permite volver si la sesión administrativa del comercio está autenticada
-      if (sessionStorage.getItem('fidelizacion_admin_auth') === 'true') {
-        const cleanUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
+      // Solo se puede salir si estamos en la vista previa del comerciante
+      if (!window.activeCustomerPassIsPreview) return;
 
-        document.getElementById('customerPassView').classList.add('hidden');
-        const previewBanner = document.getElementById('passPreviewBanner');
-        if (previewBanner) previewBanner.classList.add('hidden');
-        document.getElementById('adminView').classList.remove('hidden');
-        renderDashboard();
-      } else {
-        checkAdminPinAuth();
-      }
+      localStorage.setItem('fidelizacion_mode', 'admin');
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+
+      document.getElementById('customerPassView').classList.add('hidden');
+      const previewBanner = document.getElementById('passPreviewBanner');
+      if (previewBanner) previewBanner.classList.add('hidden');
+      document.getElementById('adminView').classList.remove('hidden');
+      renderDashboard();
     }
 
     function promptMerchantPinForStamp() {
-      if (!window.activeCustomerPassId) return;
-      const enteredPin = prompt('Ingrese el PIN de seguridad del comercio (4 dígitos):');
+      if (!window.activeCustomerCardObject && !window.activeCustomerPassId) return;
+      const enteredPin = prompt(' Exclusivo Comercio — Ingrese su PIN:');
       if (enteredPin === null) return;
 
       if (enteredPin.trim() === settings.pin) {
+        if (window.activeCustomerCardObject) {
+          window.activeCustomerCardObject.stamps = (window.activeCustomerCardObject.stamps || 0) + 1;
+          localStorage.setItem('fidelizacion_saved_pass', JSON.stringify(window.activeCustomerCardObject));
+        }
         addStamp(window.activeCustomerPassId);
-        showCustomerPass(window.activeCustomerPassId, Boolean(window.activeCustomerPassIsPreview));
-        alert('¡Sello sumado exitosamente! ⭐');
+        showCustomerPass(window.activeCustomerCardObject || window.activeCustomerPassId, Boolean(window.activeCustomerPassIsPreview));
+        showToast('¡Sello sumado exitosamente! ⭐', '⭐');
       } else {
         alert('PIN incorrecto.');
       }
