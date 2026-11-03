@@ -936,10 +936,20 @@
       setInterval(updateClock, 30000);
 
       const urlParams = new URLSearchParams(window.location.search);
+      const rawId = urlParams.get('c') || urlParams.get('tarjeta') || urlParams.get('card');
+      const paramName = urlParams.get('nom') || urlParams.get('n');
 
-      // Si el dueño entra explícitamente con ?admin=1, desbloquea modo comercio
+      // Si entra a la raíz sin parámetros de tarjeta (?c=...), o con ?admin=1, SIEMPRE muestra la aplicación del comercio
+      if (!rawId && !paramName) {
+        localStorage.removeItem('fidelizacion_mode');
+        document.getElementById('customerPassView').classList.add('hidden');
+        document.getElementById('adminView').classList.remove('hidden');
+        renderDashboard();
+        return;
+      }
+
       if (urlParams.get('admin') === '1') {
-        localStorage.setItem('fidelizacion_mode', 'admin');
+        localStorage.removeItem('fidelizacion_mode');
         const cleanUrl = window.location.origin + window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
         document.getElementById('customerPassView').classList.add('hidden');
@@ -948,67 +958,31 @@
         return;
       }
 
-      const rawId = urlParams.get('c') || urlParams.get('tarjeta') || urlParams.get('card');
-      const paramName = urlParams.get('nom') || urlParams.get('n');
-
-      // Detectar si se abrió desde el icono de Acceso Directo en la pantalla del teléfono
-      const isStandaloneShortcut = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-      const isCustomerLocked = localStorage.getItem('fidelizacion_mode') === 'customer';
-
-      if (rawId || paramName) {
-        // 1. Entró por link de tarjeta (?c=...)
-        let client = clients.find(c => c.id === rawId || c.id === 'cli_' + rawId || c.id.endsWith(rawId) || c.phone.endsWith(rawId));
-        
-        if (!client) {
-          client = {
-            id: rawId || 'VIP',
-            name: paramName || 'Socio VIP',
-            phone: urlParams.get('tel') || rawId || '',
-            stamps: parseInt(urlParams.get('s')) || 0,
-            totalStampsTarget: parseInt(urlParams.get('t')) || settings.totalStamps || 8,
-            bizName: urlParams.get('b') || settings.bizName || 'Club Fidelidad',
-            stampEmoji: urlParams.get('e') || settings.stampEmoji || '⭐',
-            rewardTitle: urlParams.get('p') || settings.rewardTitle || 'Premio Especial',
-            isWelcomeBonus: false,
-            welcomeStampsGranted: 0
-          };
-        } else {
-          // Si ya existía en local pero vienen datos actualizados en la URL, usar los de la URL si son mayores
-          if (urlParams.get('s') !== null) client.stamps = parseInt(urlParams.get('s')) || client.stamps;
-          if (urlParams.get('b')) client.bizName = urlParams.get('b');
-          if (urlParams.get('e')) client.stampEmoji = urlParams.get('e');
-          if (urlParams.get('p')) client.rewardTitle = urlParams.get('p');
-        }
-
-        // Guardar tarjeta en el teléfono y fijar Modo Cliente para que el Acceso Directo siempre abra la tarjeta directo
-        localStorage.setItem('fidelizacion_saved_pass', JSON.stringify(client));
-        localStorage.setItem('fidelizacion_mode', 'customer');
-
-        showCustomerPass(client, false);
-      } else if (isStandaloneShortcut || isCustomerLocked) {
-        // 2. Abrió desde el Acceso Directo del teléfono o el dispositivo está en Modo Cliente:
-        // Va DIRECTO a la tarjeta sin pedir clave ni mostrar jamás el panel del programa
-        let savedCard = null;
-        try {
-          const rawSaved = localStorage.getItem('fidelizacion_saved_pass') || localStorage.getItem('fidelizacion_last_viewed_pass');
-          if (rawSaved) savedCard = JSON.parse(rawSaved);
-        } catch (e) {}
-
-        if (!savedCard && clients.length > 0) {
-          savedCard = clients[0];
-        }
-
-        if (savedCard) {
-          showCustomerPass(savedCard, false);
-        } else {
-          renderDashboard();
-        }
+      // MODO CLIENTE: La URL trae los datos de la tarjeta (?c=...)
+      let client = clients.find(c => c.id === rawId || c.id === 'cli_' + rawId || c.id.endsWith(rawId) || c.phone.endsWith(rawId));
+      
+      if (!client) {
+        client = {
+          id: rawId || 'VIP',
+          name: paramName || 'Socio VIP',
+          phone: urlParams.get('tel') || rawId || '',
+          stamps: parseInt(urlParams.get('s')) || 0,
+          totalStampsTarget: parseInt(urlParams.get('t')) || settings.totalStamps || 8,
+          bizName: urlParams.get('b') || settings.bizName || 'Club Fidelidad',
+          stampEmoji: urlParams.get('e') || settings.stampEmoji || '⭐',
+          rewardTitle: urlParams.get('p') || settings.rewardTitle || 'Premio Especial',
+          isWelcomeBonus: false,
+          welcomeStampsGranted: 0
+        };
       } else {
-        // 3. Modo Comercio normal
-        renderDashboard();
+        if (urlParams.get('s') !== null) client.stamps = parseInt(urlParams.get('s')) || client.stamps;
+        if (urlParams.get('b')) client.bizName = urlParams.get('b');
+        if (urlParams.get('e')) client.stampEmoji = urlParams.get('e');
+        if (urlParams.get('p')) client.rewardTitle = urlParams.get('p');
       }
 
-      // Sincronización silenciosa en background al iniciar
+      showCustomerPass(client, false);
+
       if (navigator.onLine && settings.autoSyncDrive) {
         setTimeout(() => syncToGoogleDriveNow(false), 2500);
       }
@@ -2065,18 +2039,27 @@ ${passUrl}`;
     }
 
     function exitCustomerPassView() {
-      // Solo se puede salir si estamos en la vista previa del comerciante
-      if (!window.activeCustomerPassIsPreview) return;
-
-      localStorage.setItem('fidelizacion_mode', 'admin');
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
+      localStorage.removeItem('fidelizacion_mode');
 
       document.getElementById('customerPassView').classList.add('hidden');
       const previewBanner = document.getElementById('passPreviewBanner');
       if (previewBanner) previewBanner.classList.add('hidden');
       document.getElementById('adminView').classList.remove('hidden');
       renderDashboard();
+    }
+
+    function promptMerchantPinForAdmin() {
+      const enteredPin = prompt('Ingrese el PIN de seguridad del comercio (por defecto 1234):');
+      if (enteredPin === null) return;
+
+      if (enteredPin.trim() === (settings.pin || '1234').trim()) {
+        exitCustomerPassView();
+        showToast('Bienvenido a la aplicación ✓', '👋');
+      } else {
+        alert('PIN incorrecto.');
+      }
     }
 
     function promptMerchantPinForStamp() {
