@@ -6,6 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0F172A">
+  <link rel="manifest" href="manifest.json">
   <title>Club Fidelidad · Tarjeta Digital de Sellos</title>
   
   <!-- Google Fonts -->
@@ -328,8 +329,8 @@
             <p class="text-[10px] text-slate-400">Tarjeta Digital de Beneficios</p>
           </div>
         </div>
-        <button onclick="shareCustomerCard()" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-full text-xs font-bold border border-slate-700 active:scale-95 transition-all flex items-center gap-1.5 shadow-sm" title="Guardar tarjeta">
-          <span>📋 Guardar Pase</span>
+        <button onclick="openSavePassModal()" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-full text-xs font-bold border border-amber-500/40 active:scale-95 transition-all flex items-center gap-1.5 shadow-sm" title="Guardar en tu celular">
+          <span>📲 Guardar en Celular</span>
         </button>
       </div>
 
@@ -409,6 +410,97 @@
   <!-- ============================================================ -->
   <!-- MODALES                                                      -->
   <!-- ============================================================ -->
+
+  
+  <!-- ============================================================ -->
+  <!-- MODAL: GUARDAR PASE / ACCESO DIRECTO EN EL CELULAR          -->
+  <!-- ============================================================ -->
+  <div id="savePassModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 modal-backdrop hidden transition-opacity">
+    <div class="bg-[#12141A] border border-slate-700 text-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto no-scrollbar p-6 shadow-2xl flex flex-col space-y-4">
+      
+      <!-- Encabezado -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">📲</span>
+          <div>
+            <h2 class="text-base font-black text-white">Guardar en tu Celular</h2>
+            <p class="text-[11px] text-slate-400">Tené tus sellos y beneficios siempre a mano</p>
+          </div>
+        </div>
+        <button onclick="closeSavePassModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white font-bold flex items-center justify-center transition-all">
+          ✕
+        </button>
+      </div>
+
+      <!-- Sección Android: Botón de Instalación Directa -->
+      <div id="savePassAndroidBox" class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-center space-y-2.5">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto text-2xl shadow-inner">
+          ⭐
+        </div>
+        <div>
+          <h3 class="text-xs font-black uppercase text-amber-300 tracking-wider">Acceso Directo en tu Pantalla</h3>
+          <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+            Instalá tu tarjeta en la pantalla de inicio de tu celular para abrirla en 1 solo toque.
+          </p>
+        </div>
+        <button 
+          id="btnInstallPwa"
+          onclick="triggerInstallPwa()" 
+          class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+        >
+          <span>📲 Agregar a la Pantalla Principal</span>
+        </button>
+      </div>
+
+      <!-- Sección iPhone / Safari: Guía paso a paso -->
+      <div id="savePassIosBox" class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-3 hidden">
+        <span class="text-xs font-black uppercase text-amber-400 tracking-wider block text-center">📱 Cómo guardarlo en iPhone (Safari)</span>
+        <div class="space-y-2 text-xs text-slate-300">
+          <div class="flex items-start gap-2.5 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center flex-shrink-0">1</span>
+            <p>Tocá el botón <strong>Compartir</strong> de Safari abajo en tu pantalla (el icono <strong>⎋</strong>).</p>
+          </div>
+          <div class="flex items-start gap-2.5 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+            <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center flex-shrink-0">2</span>
+            <p>Buscá y seleccioná <strong>"Agregar a inicio" (➕)</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección PC: Código QR para escanear con el teléfono -->
+      <div id="savePassPcBox" class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-4 text-center space-y-2.5 hidden">
+        <span class="text-xs font-black uppercase text-amber-400 tracking-wider block">📲 Pasalo a tu Celular</span>
+        <div id="savePassPcQr" class="p-2 bg-white rounded-2xl shadow-inner inline-flex items-center justify-center mx-auto min-h-[160px] min-w-[160px]">
+          <!-- QR Code generado -->
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Escaneá con la cámara de tu celular para abrir tu tarjeta digital en tu teléfono.
+        </p>
+      </div>
+
+      <!-- Opciones secundarias universales -->
+      <div class="space-y-2 pt-1 border-t border-slate-800">
+        <button 
+          onclick="sharePassWhatsAppSelf()" 
+          class="w-full py-2.5 bg-[#25D366] hover:bg-[#20BA5A] text-white font-black text-xs rounded-xl shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+        >
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.766-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.299.144.347.491 1.198.534 1.285.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.087-.179.182-.077.357.101.174.453.747.971 1.209.667.593 1.229.777 1.403.864.174.087.275.072.376-.044.101-.116.433-.506.549-.68.116-.174.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.044.073.044.42-.1.825zM12.012 2C6.489 2 2 6.488 2 12.011c0 1.99.585 3.847 1.597 5.419L2 22l4.71-1.547c1.517.944 3.303 1.488 5.302 1.488 5.523 0 10.012-4.488 10.012-10.011C22.024 6.488 17.535 2 12.012 2z"/>
+          </svg>
+          <span>Auto-enviarme a mi WhatsApp</span>
+        </button>
+
+        <button 
+          onclick="copyPassDirectLink()" 
+          id="btnCopyPassDirect"
+          class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1.5"
+        >
+          <span>📋 Copiar Enlace Directo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- 1. MODAL: NUEVO SOCIO (CON BONO DE BIENVENIDA) -->
   <div id="newClientModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 modal-backdrop hidden transition-opacity">
@@ -1836,6 +1928,133 @@
         setTimeout(() => {
           clearPinInput();
         }, 500);
+      }
+    }
+
+    
+    // ==========================================
+    // TOAST NOTIFICATIONS
+    // ==========================================
+    function showToast(message, icon = '✓') {
+      let toast = document.getElementById('globalAppToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'globalAppToast';
+        toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 bg-slate-900/95 border border-slate-700 text-white text-xs font-bold rounded-2xl shadow-2xl flex items-center gap-2 pointer-events-none transition-all duration-300 opacity-0 translate-y-4';
+        document.body.appendChild(toast);
+      }
+      toast.innerHTML = `<span class="text-base text-amber-400">${icon}</span> <span>${message}</span>`;
+      toast.classList.remove('opacity-0', 'translate-y-4');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-4');
+      }, 3000);
+    }
+
+    // ==========================================
+    // ACCESO DIRECTO PWA Y GUARDADO DE PASE
+    // ==========================================
+    let deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaPrompt = e;
+      const btn = document.getElementById('btnInstallPwa');
+      if (btn) btn.classList.remove('opacity-50');
+    });
+
+    function openSavePassModal() {
+      const modal = document.getElementById('savePassModal');
+      if (!modal) return;
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+      const androidBox = document.getElementById('savePassAndroidBox');
+      const iosBox = document.getElementById('savePassIosBox');
+      const pcBox = document.getElementById('savePassPcBox');
+
+      if (isIOS) {
+        if (iosBox) iosBox.classList.remove('hidden');
+        if (androidBox) androidBox.classList.add('hidden');
+        if (pcBox) pcBox.classList.add('hidden');
+      } else if (isMobile) {
+        if (androidBox) androidBox.classList.remove('hidden');
+        if (iosBox) iosBox.classList.add('hidden');
+        if (pcBox) pcBox.classList.add('hidden');
+      } else {
+        // En PC / Desktop: Mostrar QR para escanear con el celular
+        if (pcBox) {
+          pcBox.classList.remove('hidden');
+          const qrContainer = document.getElementById('savePassPcQr');
+          if (qrContainer) {
+            qrContainer.innerHTML = '';
+            try {
+              new QRCode(qrContainer, {
+                text: window.location.href,
+                width: 150,
+                height: 150,
+                colorDark: '#0F172A',
+                colorLight: '#FFFFFF',
+                correctLevel: QRCode.CorrectLevel.M
+              });
+            } catch (err) {
+              qrContainer.innerHTML = `<img src="https://quickchart.io/qr?text=${encodeURIComponent(window.location.href)}&size=150" alt="QR Pase" class="w-36 h-36 rounded-xl">`;
+            }
+          }
+        }
+        if (androidBox) androidBox.classList.add('hidden');
+        if (iosBox) iosBox.classList.add('hidden');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeSavePassModal() {
+      const modal = document.getElementById('savePassModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function triggerInstallPwa() {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            showToast('¡Acceso directo agregado a tu pantalla! 📲', '⭐');
+            closeSavePassModal();
+          }
+          deferredPwaPrompt = null;
+        });
+      } else {
+        // Si el navegador ya lo instaló o no soporta prompt automático
+        showToast('Tocá los 3 puntos (⋮) de Chrome y elegí "Agregar a la pantalla principal"', 'ℹ️');
+      }
+    }
+
+    function sharePassWhatsAppSelf() {
+      const url = window.location.href;
+      const msg = `Mi Tarjeta Digital de Fidelidad:
+${url}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function copyPassDirectLink() {
+      const url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('¡Enlace copiado al portapapeles! ✓', '📋');
+          const btn = document.getElementById('btnCopyPassDirect');
+          if (btn) btn.innerHTML = '<span>✓ ¡Enlace Copiado!</span>';
+          setTimeout(() => {
+            if (btn) btn.innerHTML = '<span>📋 Copiar Enlace Directo</span>';
+          }, 2500);
+        }).catch(() => {
+          prompt('Copia tu enlace:', url);
+        });
+      } else {
+        prompt('Copia tu enlace:', url);
       }
     }
 
