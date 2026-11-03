@@ -147,6 +147,11 @@
 
           <!-- Acciones Rápidas del Header -->
           <div class="flex items-center gap-2">
+            <!-- Botón Bloquear Sesión -->
+            <button onclick="lockAdminSession()" class="w-10 h-10 rounded-full bg-[#1E293B] border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 active:scale-95 transition-transform" title="Bloquear con PIN (Cerrar sesión)">
+              <span class="text-base">🔒</span>
+            </button>
+
             <!-- Botón Copia Drive -->
             <button onclick="openBackupModal()" class="w-10 h-10 rounded-full bg-[#1E293B] border border-slate-700 flex items-center justify-center text-amber-400 hover:bg-slate-700 active:scale-95 transition-transform relative" title="Copia de seguridad">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,11 +257,66 @@
     </div>
 
 
+    
+    <!-- ============================================================ -->
+    <!-- VISTA DE BLOQUEO: ACCESO COMERCIO CON PIN                   -->
+    <!-- ============================================================ -->
+    <div id="pinLockView" class="flex-1 flex flex-col items-center justify-center p-6 hidden min-h-[85vh]">
+      <div class="bg-gradient-to-b from-[#1E293B] to-[#0F172A] border border-slate-700/80 text-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 text-center">
+        <!-- Icono -->
+        <div class="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-3xl shadow-inner">
+          🔒
+        </div>
+
+        <div>
+          <h2 class="text-lg font-black text-white" id="pinLockBizTitle">Panel del Comercio</h2>
+          <p class="text-xs text-slate-400 mt-1">Ingrese su PIN de seguridad para acceder a clientes y ajustes</p>
+        </div>
+
+        <!-- Indicador de PIN (4 dígitos) -->
+        <div class="flex items-center justify-center gap-3 py-1">
+          <span id="pinDot-1" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all"></span>
+          <span id="pinDot-2" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all"></span>
+          <span id="pinDot-3" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all"></span>
+          <span id="pinDot-4" class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all"></span>
+        </div>
+
+        <p id="pinLockErrorMsg" class="text-xs text-rose-400 font-bold min-h-[1.2rem] transition-opacity opacity-0">
+          PIN incorrecto. Reintente.
+        </p>
+
+        <!-- Teclado Numérico Táctil -->
+        <div class="grid grid-cols-3 gap-2.5 max-w-[260px] mx-auto pt-1">
+          <button type="button" onclick="pressPinDigit('1')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">1</button>
+          <button type="button" onclick="pressPinDigit('2')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">2</button>
+          <button type="button" onclick="pressPinDigit('3')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">3</button>
+          <button type="button" onclick="pressPinDigit('4')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">4</button>
+          <button type="button" onclick="pressPinDigit('5')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">5</button>
+          <button type="button" onclick="pressPinDigit('6')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">6</button>
+          <button type="button" onclick="pressPinDigit('7')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">7</button>
+          <button type="button" onclick="pressPinDigit('8')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">8</button>
+          <button type="button" onclick="pressPinDigit('9')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">9</button>
+          <button type="button" onclick="clearPinInput()" class="h-14 rounded-2xl bg-slate-900/60 hover:bg-slate-800 active:scale-95 text-slate-400 font-bold text-xs border border-slate-800 transition-all flex items-center justify-center">Borrar</button>
+          <button type="button" onclick="pressPinDigit('0')" class="h-14 rounded-2xl bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-white font-black text-xl border border-slate-700/80 shadow-sm transition-all">0</button>
+          <button type="button" onclick="deletePinDigit()" class="h-14 rounded-2xl bg-slate-900/60 hover:bg-slate-800 active:scale-95 text-slate-400 font-bold text-lg border border-slate-800 transition-all flex items-center justify-center">⌫</button>
+        </div>
+
+        <p class="text-[11px] text-slate-500 pt-2">PIN inicial por defecto: <code class="text-amber-400 font-mono font-bold">1234</code></p>
+      </div>
+    </div>
+
     <!-- ============================================================ -->
     <!-- VISTA 2: PASE DIGITAL / TARJETA DEL CLIENTE (VISTA MÓVIL)     -->
     <!-- ============================================================ -->
     <div id="customerPassView" class="flex-1 flex flex-col hidden bg-[#07090E] p-4 sm:p-6 overflow-y-auto no-scrollbar">
       
+      <!-- Barra superior cliente -->
+      <!-- Banner de Vista Previa (Solo cuando el comerciante previsualiza desde el admin) -->
+      <div id="passPreviewBanner" class="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-black flex items-center justify-between hidden rounded-2xl mb-4 shadow-lg">
+        <span>👁️ Vista Previa del Comercio</span>
+        <button onclick="exitCustomerPassView()" class="underline text-xs hover:text-black">Cerrar vista previa ✕</button>
+      </div>
+
       <!-- Barra superior cliente -->
       <div class="flex items-center justify-between pb-4">
         <div class="flex items-center gap-2">
@@ -268,8 +328,8 @@
             <p class="text-[10px] text-slate-400">Tarjeta Digital de Beneficios</p>
           </div>
         </div>
-        <button onclick="exitCustomerPassView()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full text-xs font-bold border border-slate-700 active:scale-95 transition-all">
-          ← Volver
+        <button onclick="shareCustomerCard()" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-full text-xs font-bold border border-slate-700 active:scale-95 transition-all flex items-center gap-1.5 shadow-sm" title="Guardar tarjeta">
+          <span>📋 Guardar Pase</span>
         </button>
       </div>
 
@@ -835,15 +895,36 @@
       updateClock();
       setInterval(updateClock, 30000);
 
-      // Revisar si se entra en Modo Pase Digital del Cliente (URL con ?c=ID o ?tarjeta=ID)
+      // Revisar si se entra en Modo Pase Digital del Cliente
       const urlParams = new URLSearchParams(window.location.search);
       const rawId = urlParams.get('c') || urlParams.get('tarjeta') || urlParams.get('card');
-      
-      if (rawId) {
-        const found = clients.find(c => c.id === rawId || c.id === 'cli_' + rawId || c.id.endsWith(rawId) || c.phone.endsWith(rawId));
-        showCustomerPass(found ? found.id : rawId);
+      const paramName = urlParams.get('nom') || urlParams.get('n');
+
+      if (rawId || paramName) {
+        // Buscar si existe en la base local del dispositivo
+        let client = clients.find(c => c.id === rawId || c.id === 'cli_' + rawId || c.id.endsWith(rawId) || c.phone.endsWith(rawId));
+        
+        // Si no existe (ej. teléfono del cliente que no tiene la BD del comercio), armar pase portable
+        if (!client) {
+          client = {
+            id: rawId || 'VIP',
+            name: paramName || 'Socio VIP',
+            phone: urlParams.get('tel') || rawId || '',
+            stamps: parseInt(urlParams.get('s')) || 0,
+            totalStampsTarget: parseInt(urlParams.get('t')) || settings.totalStamps || 8,
+            bizName: urlParams.get('b') || settings.bizName || 'Club Fidelidad',
+            stampEmoji: urlParams.get('e') || settings.stampEmoji || '⭐',
+            rewardTitle: urlParams.get('p') || settings.rewardTitle || 'Premio Especial',
+            isWelcomeBonus: false,
+            welcomeStampsGranted: 0
+          };
+        }
+
+        // Modo Cliente: NUNCA se muestra banner de comercio ni botón de volver
+        showCustomerPass(client, false);
       } else {
-        renderDashboard();
+        // Modo Comercio: verificar PIN de seguridad
+        checkAdminPinAuth();
       }
 
       // Sincronización silenciosa en background al iniciar
@@ -1261,7 +1342,7 @@
 
             <!-- Menú de opciones (Ver / Borrar) -->
             <div class="flex items-center gap-1">
-              <button onclick="showCustomerPass('${client.id}')" class="p-1.5 text-slate-400 hover:text-amber-400 rounded-lg hover:bg-slate-800" title="Ver Tarjeta Digital">
+              <button onclick="showCustomerPass('${client.id}', true)" class="p-1.5 text-slate-400 hover:text-amber-400 rounded-lg hover:bg-slate-800" title="Ver Tarjeta Digital">
                 📱
               </button>
               <button onclick="deleteClientPrompt('${client.id}')" class="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-slate-800" title="Eliminar socio">
@@ -1551,13 +1632,24 @@
     }
 
     function generateCardUrl(clientId) {
-      // Usar código corto para que el enlace sea compacto en WhatsApp
-      const shortCode = String(clientId).replace(/^cli_/, '').slice(-5);
-      if (!window.location.origin || window.location.origin === 'null' || window.location.protocol === 'file:') {
-        return `https://juancdgo.github.io/fidelizacion/?c=${shortCode}`;
-      }
-      const baseUrl = window.location.origin + window.location.pathname;
-      return `${baseUrl}?c=${shortCode}`;
+      const client = typeof clientId === 'object' ? clientId : clients.find(c => c.id === clientId);
+      if (!client) return window.location.href;
+
+      const isLocal = !window.location.origin || window.location.origin === 'null' || window.location.protocol === 'file:';
+      const base = isLocal ? 'https://juancdgo.github.io/fidelizacion/' : (window.location.origin + window.location.pathname);
+      
+      const shortId = String(client.id).replace(/^cli_/, '').slice(-5);
+      const params = new URLSearchParams();
+      params.set('c', shortId);
+      params.set('nom', client.name);
+      if (client.phone) params.set('tel', client.phone);
+      params.set('s', client.stamps || 0);
+      params.set('t', client.totalStampsTarget || settings.totalStamps || 8);
+      params.set('b', settings.bizName || 'Club Fidelidad');
+      params.set('e', settings.stampEmoji || '⭐');
+      params.set('p', settings.rewardTitle || 'Premio Especial');
+      
+      return `${base}?${params.toString()}`;
     }
 
     function sendWelcomeWhatsApp(client) {
@@ -1635,27 +1727,176 @@
     // -------------------------------------------------------------
     // VISTA DEL CLIENTE / PASE DIGITAL (?tarjeta=ID)
     // -------------------------------------------------------------
-    function showCustomerPass(clientId) {
-      const client = clients.find(c => c.id === clientId);
+    // ==========================================
+    // SEGURIDAD: CONTROL DE ACCESO CON PIN AL PANEL
+    // ==========================================
+    let enteredPinBuffer = '';
+
+    function checkAdminPinAuth() {
+      const isAuth = sessionStorage.getItem('fidelizacion_admin_auth') === 'true';
+      const pinLockView = document.getElementById('pinLockView');
+      const adminView = document.getElementById('adminView');
+      const passView = document.getElementById('customerPassView');
+
+      if (isAuth) {
+        if (pinLockView) pinLockView.classList.add('hidden');
+        if (passView) passView.classList.add('hidden');
+        if (adminView) adminView.classList.remove('hidden');
+        renderDashboard();
+      } else {
+        if (adminView) adminView.classList.add('hidden');
+        if (passView) passView.classList.add('hidden');
+        if (pinLockView) {
+          pinLockView.classList.remove('hidden');
+          const title = document.getElementById('pinLockBizTitle');
+          if (title) title.textContent = settings.bizName || 'Panel del Comercio';
+        }
+        resetPinLockInput();
+      }
+    }
+
+    function lockAdminSession() {
+      sessionStorage.removeItem('fidelizacion_admin_auth');
+      checkAdminPinAuth();
+      showToast('Sesión del comercio bloqueada 🔒', '🔒');
+    }
+
+    
+    // Soporte para teclado físico en pantalla de bloqueo PIN
+    window.addEventListener('keydown', (e) => {
+      const pinLock = document.getElementById('pinLockView');
+      if (pinLock && !pinLock.classList.contains('hidden')) {
+        if (e.key >= '0' && e.key <= '9') {
+          pressPinDigit(e.key);
+        } else if (e.key === 'Backspace') {
+          deletePinDigit();
+        } else if (e.key === 'Escape') {
+          clearPinInput();
+        }
+      }
+    });
+
+    function pressPinDigit(digit) {
+      if (enteredPinBuffer.length >= 4) return;
+      enteredPinBuffer += digit;
+      updatePinDots();
+
+      if (enteredPinBuffer.length === 4) {
+        setTimeout(submitPinAuth, 150);
+      }
+    }
+
+    function deletePinDigit() {
+      if (enteredPinBuffer.length > 0) {
+        enteredPinBuffer = enteredPinBuffer.slice(0, -1);
+        updatePinDots();
+      }
+    }
+
+    function clearPinInput() {
+      enteredPinBuffer = '';
+      updatePinDots();
+    }
+
+    function resetPinLockInput() {
+      enteredPinBuffer = '';
+      updatePinDots();
+      const errEl = document.getElementById('pinLockErrorMsg');
+      if (errEl) errEl.classList.add('opacity-0');
+    }
+
+    function updatePinDots() {
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`pinDot-${i}`);
+        if (!dot) continue;
+        if (i <= enteredPinBuffer.length) {
+          dot.className = 'w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-400 scale-110 transition-all';
+        } else {
+          dot.className = 'w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-900 transition-all';
+        }
+      }
+    }
+
+    function submitPinAuth() {
+      const targetPin = (settings.pin || '1234').trim();
+      const errEl = document.getElementById('pinLockErrorMsg');
+
+      if (enteredPinBuffer === targetPin) {
+        sessionStorage.setItem('fidelizacion_admin_auth', 'true');
+        if (errEl) errEl.classList.add('opacity-0');
+        checkAdminPinAuth();
+        showToast('Acceso al panel concedido ✓', '🔑');
+      } else {
+        if (errEl) errEl.classList.remove('opacity-0');
+        const dotsContainer = document.getElementById('pinDot-1')?.parentElement;
+        if (dotsContainer) {
+          dotsContainer.classList.add('animate-pulse');
+          setTimeout(() => dotsContainer.classList.remove('animate-pulse'), 400);
+        }
+        setTimeout(() => {
+          clearPinInput();
+        }, 500);
+      }
+    }
+
+    function shareCustomerCard() {
+      const url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Enlace de tu pase copiado al portapapeles 📋', '📋');
+        }).catch(() => {
+          prompt('Copia tu enlace oficial:', url);
+        });
+      } else {
+        prompt('Copia tu enlace oficial:', url);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // VISTA DEL PASE DIGITAL (CLIENTE O PREVIA)
+    // -------------------------------------------------------------
+    function showCustomerPass(clientOrId, isPreview = false) {
+      let client = null;
+      if (typeof clientOrId === 'object' && clientOrId !== null) {
+        client = clientOrId;
+      } else {
+        client = clients.find(c => c.id === clientOrId || c.phone.endsWith(clientOrId) || c.id.endsWith(clientOrId));
+      }
+
       if (!client) {
-        alert('Tarjeta no encontrada.');
+        alert('Tarjeta de fidelidad no encontrada.');
         return;
       }
 
-      // Ocultar vista admin y mostrar pase digital
+      // Ocultar vista admin y pantalla de bloqueo
       document.getElementById('adminView').classList.add('hidden');
+      const pinLock = document.getElementById('pinLockView');
+      if (pinLock) pinLock.classList.add('hidden');
+
       const passView = document.getElementById('customerPassView');
       passView.classList.remove('hidden');
 
-      // Cargar datos del comercio y cliente
-      document.getElementById('customerPassBizName').textContent = settings.bizName;
-      updateLogosAndAvatars();
-      document.getElementById('customerCardWatermark').textContent = settings.stampEmoji;
-      document.getElementById('customerPassName').textContent = client.name;
-      document.getElementById('customerPassId').textContent = `Socio ID: #${client.phone.slice(-4) || 'VIP'}`;
-      document.getElementById('customerPassRewardLabel').textContent = `🎁 ${settings.rewardTitle}`;
+      // Banner de vista previa (solo visible si el comercio está previsualizando desde su panel)
+      const previewBanner = document.getElementById('passPreviewBanner');
+      if (previewBanner) {
+        if (isPreview) {
+          previewBanner.classList.remove('hidden');
+        } else {
+          previewBanner.classList.add('hidden');
+        }
+      }
 
-      const target = client.totalStampsTarget || settings.totalStamps;
+      // Cargar datos del comercio y cliente
+      document.getElementById('customerPassBizName').textContent = client.bizName || settings.bizName;
+      updateLogosAndAvatars();
+      const stampEmoji = client.stampEmoji || settings.stampEmoji || '⭐';
+      document.getElementById('customerCardWatermark').textContent = stampEmoji;
+      document.getElementById('customerPassName').textContent = client.name;
+      document.getElementById('customerPassId').textContent = `Socio ID: #${(client.phone || client.id || '').slice(-4) || 'VIP'}`;
+      const rewardTitle = client.rewardTitle || settings.rewardTitle;
+      document.getElementById('customerPassRewardLabel').textContent = `🎁 ${rewardTitle}`;
+
+      const target = client.totalStampsTarget || settings.totalStamps || 8;
       const isReady = client.stamps >= target;
       const missing = Math.max(0, target - client.stamps);
       const percent = Math.min(100, Math.round((client.stamps / target) * 100));
@@ -1669,11 +1910,11 @@
 
       if (isReady) {
         titleEl.textContent = '🏆 ¡FELICITACIONES! TARJETA COMPLETA';
-        descEl.textContent = `Ya podés reclamar: ${settings.rewardTitle}. ¡Mostrá tu QR en caja!`;
+        descEl.textContent = `Ya podés reclamar: ${rewardTitle}. ¡Mostrá tu QR en caja!`;
         triggerConfetti();
       } else if (missing === 1) {
         titleEl.textContent = '🔥 ¡ESTÁS A UN PASITO DE TU PREMIO!';
-        descEl.textContent = `Te falta solo 1 sello para reclamar: ${settings.rewardTitle}`;
+        descEl.textContent = `Te falta solo 1 sello para reclamar: ${rewardTitle}`;
       } else if (client.isWelcomeBonus && client.stamps === client.welcomeStampsGranted) {
         titleEl.textContent = '🎉 ¡Bienvenido! Recibiste tu Bono Inicial';
         descEl.textContent = `Te regalamos tus primeros ${client.stamps} sellos. ¡Ya estás a mitad de camino!`;
@@ -1690,7 +1931,7 @@
         const cell = document.createElement('div');
         cell.className = `h-14 sm:h-16 rounded-2xl flex flex-col items-center justify-center font-black transition-all ${stamped ? 'stamp-active animate-stamp' : 'stamp-empty'}`;
         cell.innerHTML = `
-          <span class="text-xl sm:text-2xl">${stamped ? settings.stampEmoji : ''}</span>
+          <span class="text-xl sm:text-2xl">${stamped ? stampEmoji : ''}</span>
           <span class="text-[10px] ${stamped ? 'text-slate-900 font-black' : 'text-slate-500'}">${i}</span>
         `;
         grid.appendChild(cell);
@@ -1701,7 +1942,7 @@
       qrContainer.innerHTML = '';
       try {
         new QRCode(qrContainer, {
-          text: `CLIENT_ID:${client.id}|PHONE:${client.phone}`,
+          text: `CLIENT_ID:${client.id}|PHONE:${client.phone || ''}`,
           width: 140,
           height: 140,
           colorDark: "#0F172A",
@@ -1712,18 +1953,25 @@
         qrContainer.innerHTML = `<span class="text-xs text-slate-800 font-mono font-bold">#${client.id}</span>`;
       }
 
-      // Guardar ID activo para suma con PIN
-      window.activeCustomerPassId = clientId;
+      window.activeCustomerPassId = client.id;
+      window.activeCustomerPassIsPreview = isPreview;
+      window.scrollTo(0, 0);
     }
 
     function exitCustomerPassView() {
-      // Limpiar URL si tenía parámetros
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+      // Solo permite volver si la sesión administrativa del comercio está autenticada
+      if (sessionStorage.getItem('fidelizacion_admin_auth') === 'true') {
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
 
-      document.getElementById('customerPassView').classList.add('hidden');
-      document.getElementById('adminView').classList.remove('hidden');
-      renderDashboard();
+        document.getElementById('customerPassView').classList.add('hidden');
+        const previewBanner = document.getElementById('passPreviewBanner');
+        if (previewBanner) previewBanner.classList.add('hidden');
+        document.getElementById('adminView').classList.remove('hidden');
+        renderDashboard();
+      } else {
+        checkAdminPinAuth();
+      }
     }
 
     function promptMerchantPinForStamp() {
@@ -1733,7 +1981,7 @@
 
       if (enteredPin.trim() === settings.pin) {
         addStamp(window.activeCustomerPassId);
-        showCustomerPass(window.activeCustomerPassId);
+        showCustomerPass(window.activeCustomerPassId, Boolean(window.activeCustomerPassIsPreview));
         alert('¡Sello sumado exitosamente! ⭐');
       } else {
         alert('PIN incorrecto.');

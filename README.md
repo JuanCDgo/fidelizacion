@@ -1,44 +1,58 @@
-# ⭐ Micro App Club Fidelidad & Tarjeta Digital de Sellos
+# ⭐ Manual Técnico: Micro App Club Fidelidad & Tarjeta Digital de Sellos
 
-Aplicación web ligera (HTML5 + Vanilla JS + Tailwind CSS) para fidelización de clientes y tarjetas de sellos digitales (*punch cards*) para comercios y profesionales independientes de cualquier rubro.
-
----
-
-## 🚀 Características Principales
-
-### 🎁 1. Estrategia de Progreso Concedido (*Endowed Progress Effect*)
-- Al dar de alta un cliente, el sistema permite otorgarle automáticamente **sellos de regalo iniciales** (ej: 4 sellos de bienvenida sobre una meta de 8).
-- **Psicología aplicada:** El cliente siente que ya arrancó al 50% de su camino, generando un enganche inmediato mucho mayor y aumentando drásticamente la tasa de retorno.
-- Mensaje de bienvenida optimizado por WhatsApp en 1 toque:
-  > *"¡Hola Mateo! 🎉 ¡Te damos la bienvenida a Café Urbano! Por sumarte a nuestro Club de Fidelidad te regalamos tus primeros 4 sellos ⭐. Ya tenés 4 de 8 sellos listos. ¡Solo te faltan 4 para reclamar tu premio: 1 Café de especialidad gratis! 🥳 Acá podés ver tu tarjeta digital: [Link]"*
-
-### 📱 2. Pase Digital del Cliente (Vista Móvil Estilo Wallet)
-- Acceso directo mediante URL (`?tarjeta=CLI_ID`).
-- Visualización interactiva de la tarjeta perforada: sellos activos dorados, casilleros pendientes, barra de progreso y código QR personal del socio para mostrar en caja.
-- Funciona 100% offline, se puede instalar en la pantalla de inicio del celular como una app nativa (PWA).
-
-### ⚡ 3. Panel Ágil para el Mostrador / Comerciante
-- **+1 Sello** en un toque con micro-animación y sonido/confeti al completar la tarjeta.
-- **Canjear Premio** cuando llega a la meta, con reinicio automático de tarjeta y contador histórico de premios canjeados.
-- **Buscador y Escáner QR:** Búsqueda rápida por nombre, teléfono o últimos 4 dígitos.
-- **Recordatorios por WhatsApp:**
-  - Saludo de bienvenida con sellos regalados.
-  - Alerta *"🔥 ¡Te falta solo 1 sello!"*.
-  - Felicitación *"🏆 ¡Tu premio está listo para canjear!"*.
-
-### 🎨 4. Configuración para Cualquier Rubro (Uso General)
-- Meta de sellos adaptable: 4, 6, 8, 10 o 12 sellos.
-- Bono de bienvenida personalizable: de 0 a 5 sellos de regalo.
-- Iconos intercambiables: ⭐ Estrella, ☕ Café, ✂️ Peluquería/Barbería, 🍔 Hamburguesa, 🍕 Pizza, 🥐 Panadería/Medialuna, 🎁 Regalo, 💎 Diamante, 🐾 Mascota, 🚗 Lavadero, 🍦 Heladería, 🍺 Cervecería.
-- PIN de seguridad de 4 dígitos para sumar sellos desde el celular del cliente.
-
-### ☁️ 5. Respaldo y Portabilidad
-- Sincronización automática con Google Drive (Carpeta: *Copia de seguridad Fidelizacion*).
-- Descarga de respaldo en formato JSON local.
-- Exportación a planilla Excel / CSV con un clic.
-- Restauración rápida en caso de cambio de dispositivo.
+Aplicación web progresiva (PWA / SPA) ultra ligera construida en Vanilla JavaScript (ES6+), HTML5 y Tailwind CSS, diseñada para fidelización de clientes y tarjetas de sellos digitales (*punch cards*) para comercios y profesionales independientes de cualquier rubro.
 
 ---
 
-## 🌐 Demo Online
-👉 https://juancdgo.github.io/fidelizacion/
+## 🏗️ 1. Arquitectura y Seguridad
+
+### 🔒 Control de Acceso y Blindaje de Privacidad
+- **Separación de Contextos (Cliente vs. Comercio):**
+  - **Modo Cliente (`?c=ID...`):** Al abrir un enlace de pase, la aplicación renderiza exclusivamente la tarjeta digital de socio (`#customerPassView`). **No existe botón de volver** ni acceso a la base de clientes.
+  - **Modo Comercio:** Al ingresar a la raíz de la aplicación sin parámetros de cliente, el sistema exige validación de identidad mediante **PIN de 4 dígitos** (`#pinLockView`).
+  - **Persistencia de Sesión Segura:** La autenticación administrativa se almacena en `sessionStorage` (`fidelizacion_admin_auth = 'true'`), lo que permite al comerciante operar sin reingresar el PIN en cada recarga durante su jornada de trabajo, pero se cierra automáticamente al cerrar la pestaña o tocar el botón **`🔒`** en la cabecera.
+- **Portabilidad Total de Pases:** Los enlaces generados por WhatsApp incluyen los parámetros del cliente (`c`, `nom`, `tel`, `s`, `t`, `b`, `e`, `p`). Esto garantiza que **cualquier teléfono móvil** renderice la tarjeta personalizada al instante, aun sin tener datos previos en su memoria local.
+
+---
+
+## 💾 2. Modelo de Datos (LocalStorage)
+
+### Cliente (`clients` en `fidelizacion_clients`)
+```typescript
+interface Client {
+  id: string;                     // Timestamp ID único (ej: 'cli_1730000000')
+  name: string;                   // Nombre y Apellido
+  phone: string;                  // Celular con código de área (ej: '54911...')
+  stamps: number;                 // Sellos acumulados actuales
+  totalStampsTarget: number;      // Meta de sellos (ej: 8 o 10)
+  rewardsClaimed: number;         // Contador de premios canjeados
+  isWelcomeBonus: boolean;        // Si recibió sellos de bienvenida
+  welcomeStampsGranted: number;   // Cantidad de sellos iniciales
+  notes: string;                  // Preferencias del cliente
+  lastVisit: string;              // Fecha ISO última visita
+  createdAt: string;              // Fecha ISO alta
+}
+```
+
+### Configuración (`settings` en `fidelizacion_settings`)
+```typescript
+interface Settings {
+  bizName: string;                // Nombre comercial
+  bizSub: string;                 // Subtítulo / rubro
+  stampEmoji: string;             // Emoji del sello (ej: 🐉, ⭐, ☕, 💅)
+  bizLogo: string;                // Base64 DataURL
+  totalStamps: number;            // Meta global por defecto (ej: 8)
+  welcomeStamps: number;          // Sellos de regalo de bienvenida (ej: 4)
+  rewardTitle: string;            // Premio (ej: '1 Consumición Gratis')
+  pin: string;                    // PIN de seguridad (default: '1234')
+  phone: string;                  // Celular del comercio
+  driveWebhookUrl: string;        // Google Apps Script Webhook
+  autoSyncDrive: boolean;         // Sincronización automática
+  lastBackupDate: string | null;  // Timestamp de último backup
+}
+```
+
+---
+
+## 🌐 3. URL de Producción en GitHub Pages
+👉 **https://juancdgo.github.io/fidelizacion/**
